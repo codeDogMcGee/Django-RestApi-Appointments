@@ -1,0 +1,9 @@
+{% if next_five_appointments %}
+    <ul>
+        {% for appointment in next_five_appointments %}
+            <li><a href="{% url 'appointments:view_appointment' appointment.id %}">{{ appointment.appointment_datetime }}</a></li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>There are no appointments.</p>
+{% endif %}
