@@ -1,7 +1,7 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, get_list_or_404
 from django.http import Http404, HttpResponse
 
-from .models import Appointment
+from .models import Appointment, Employee
 
 
 def index(request):
@@ -13,7 +13,11 @@ def index(request):
 
 
 def make_appointment(request):
-    return HttpResponse("Make appointment here")
+    employees = Employee.objects.order_by('-first_name')
+    context = {
+        'employees': employees
+    }
+    return render(request, 'appointments/make_appointment.html', context)
 
 
 def view_appointment(request, appointment_id):
