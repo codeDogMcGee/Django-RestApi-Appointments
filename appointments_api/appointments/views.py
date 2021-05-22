@@ -1,16 +1,55 @@
+from rest_framework import viewsets
+from rest_framework import renderers
 from rest_framework import generics
+from rest_framework import permissions
+from rest_framework.decorators import api_view, action
+from rest_framework.reverse import reverse
+from rest_framework.response import Response
+from django.contrib.auth.models import User
 from appointments.models import Appointment
-from appointments.serializers import AppointmentSerializer
+from appointments.serializers import AppointmentSerializer, UserSerializer
+from appointments.permissions import IsOwnerOrReadOnly
 
 
-class AppointmentsList(generics.ListCreateAPIView):
+class AppointmentViewSet(viewsets.ModelViewSet):
+    """
+    This viewset automatically provides `list`, `create`, `retrieve`,
+    `update` and `destroy` actions.
+
+    Additionally we also provide an extra `highlight` action.
+    """
     queryset = Appointment.objects.all()
     serializer_class = AppointmentSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+
+    # action decorator allows custom endpoints that aren't create, update, delete
+    # include url_path as decorator argument to change the way the url is constructed
+    @action(detail=True, renderer_classes=[renderers.StaticHTMLRenderer])
+    def highlight(self, request, *args, **kwargs):
+        appointment = self.get_object()
+        return Response(appointment.highlighted)
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
 
 
-class AppointmentDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Appointment.objects.all()
-    serializer_class = AppointmentSerializer
+class UserViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    This viewset automatically provides `list` and `retrieve` actions.
+    """
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+@api_view(['GET'])
+def api_root(request, format=None):
+    return Response({
+        'users': reverse('user-list', request=request, format=format),
+        'appointments': reverse('appointment-list', request=request, format=format)
+    })
+
+
+
+
 
 
 ################################################################################
@@ -24,6 +63,40 @@ class AppointmentDetail(generics.RetrieveUpdateDestroyAPIView):
 # from rest_framework.decorators import api_view
 # from django.views.decorators.csrf import csrf_exempt
 # from rest_framework.parsers import JSONParser
+#
+# class AppointmentHighlight(generics.GenericAPIView):
+#     queryset = Appointment.objects.all()
+#     renderer_classes = [renderers.StaticHTMLRenderer]
+#
+#     def get(self, request, *args, **kwargs):
+#         appointment = self.get_object()
+#         return Response(appointment.highlighted)
+#
+#
+# class AppointmentsList(generics.ListCreateAPIView):
+#     queryset = Appointment.objects.all()
+#     serializer_class = AppointmentSerializer
+#     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+#
+#     # associate the appointment the the user that created it with owner=
+#     def perform_create(self, serializer):
+#         serializer.save(owner=self.request.user)
+#
+#
+# class AppointmentDetail(generics.RetrieveUpdateDestroyAPIView):
+#     queryset = Appointment.objects.all()
+#     serializer_class = AppointmentSerializer
+#     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+
+# class UserList(generics.ListAPIView):
+#     queryset = User.objects.all()
+#     serializer_class = UserSerializer
+#
+# class UserDetail(generics.RetrieveAPIView):
+#     queryset = User.objects.all()
+#     serializer_class = UserSerializer
+
+
 
 # class AppointmentsList(APIView):
 #     def get(self, request, format=None):
