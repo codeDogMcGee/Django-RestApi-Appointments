@@ -1,4 +1,4 @@
-"""appointment_book URL Configuration
+"""example_api URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/3.2/topics/http/urls/
@@ -15,8 +15,17 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from rest_framework import routers
+# from auth import views
+
+# router = routers.DefaultRouter()
+# router.register(r'users', views.UserViewSet)
+# router.register(r'groups', views.GroupViewSet)
 
 urlpatterns = [
-    path('appointments/', include('appointments.urls')),
+    # path('', include(router.urls)),  # this includes the users and groups routes from above
+    path('', include('appointments.urls')),
     path('admin/', admin.site.urls),
+    # path('auth-auth/', include('rest_framework.urls', namespace='rest_framework')),  # default login/logout views
+
 ]
