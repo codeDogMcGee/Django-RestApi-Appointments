@@ -1,6 +1,6 @@
 # Appointments-Django
 
-###Python Version 3.9.5
+### Python Version 3.9.5
 
 This project will be used as the boilerplate for a production custom appointments app for a nail salon. It is split into
 two pieces that will run independently in production, an api and a website.
