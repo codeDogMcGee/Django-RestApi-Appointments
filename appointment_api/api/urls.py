@@ -9,7 +9,7 @@ router.register(r'employees', views.EmployeeViewSet)
 router.register(r'customers', views.CustomerViewSet)
 
 urlpatterns = [
-    path('', include(router.urls))
+    path('', include(router.urls)),
 ]
 
 # include login and logout views

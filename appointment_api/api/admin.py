@@ -13,11 +13,11 @@ class EmployeeInline(admin.StackedInline):
     verbose_name_plural = 'employee'
 
 
-# Define a new User admin
-class UserAdmin(BaseUserAdmin):
-    inlines = (EmployeeInline,)
-
-
-# Re-register UserAdmin
-admin.site.unregister(User)
-admin.site.register(User, UserAdmin)
+# # Define a new User admin
+# class UserAdmin(BaseUserAdmin):
+#     inlines = (EmployeeInline,)
+#
+#
+# # Re-register UserAdmin
+# admin.site.unregister(User)
+# admin.site.register(User, UserAdmin)

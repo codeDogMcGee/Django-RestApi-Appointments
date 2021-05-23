@@ -15,10 +15,15 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
         return obj.owner == request.user
 
 
-class IsOwner(permissions.BasePermission):
+class IsAdminOrReadOnly(permissions.BasePermission):
     """
-    Only allow owner to update or delete, or read
+    Only allow admin to update or delete, anyone can read
     """
-    def has_object_permission(self, request, view, obj):
-        # Write permissions
-        return obj.owner == request.user
+
+    def has_permission(self, request, view):
+        # Read permissions
+        # Always allow GET, HEAD or OPTIONS requests.
+        if request.method in permissions.SAFE_METHODS:
+            return True
+
+        return request.user.is_staff
