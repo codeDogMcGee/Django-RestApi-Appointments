@@ -13,3 +13,12 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
 
         # Write permissions
         return obj.owner == request.user
+
+
+class IsOwner(permissions.BasePermission):
+    """
+    Only allow owner to update or delete, or read
+    """
+    def has_object_permission(self, request, view, obj):
+        # Write permissions
+        return obj.owner == request.user

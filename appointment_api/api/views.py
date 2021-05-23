@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from django.contrib.auth.models import User
 from api.models import Appointment, Customer, Employee
 from api.serializers import AppointmentSerializer, UserSerializer, EmployeeSerializer, CustomerSerializer
-from api.permissions import IsOwnerOrReadOnly
+from api.permissions import IsOwner
 
 
 class AppointmentViewSet(viewsets.ModelViewSet):
@@ -18,7 +18,7 @@ class AppointmentViewSet(viewsets.ModelViewSet):
     """
     queryset = Appointment.objects.all()
     serializer_class = AppointmentSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+    permission_classes = [permissions.IsAuthenticated, IsOwner]
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -32,20 +32,30 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = UserSerializer
 
 
-class CustomerViewSet(viewsets.ReadOnlyModelViewSet):
+class CustomerViewSet(viewsets.ModelViewSet):
     """
-    This viewset automatically provides `list` and `retrieve` actions.
+    This viewset automatically provides `list`, `create`, `retrieve`,
+    `update` and `destroy` actions.
     """
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
 
 
-class EmployeeViewSet(viewsets.ReadOnlyModelViewSet):
+class EmployeeViewSet(viewsets.ModelViewSet):
     """
-    This viewset automatically provides `list` and `retrieve` actions.
+    This viewset automatically provides `list`, `create`, `retrieve`,
+    `update` and `destroy` actions.
     """
     queryset = Employee.objects.all()
     serializer_class = EmployeeSerializer
+    # permission_classes = [permissions.IsAdminUser]
+
+    def perform_create(self, serializer):
+        serializer.save()
 
 
 @api_view(['GET'])

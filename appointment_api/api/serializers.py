@@ -9,7 +9,7 @@ class AppointmentSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Appointment
-        fields = ['url', 'id', 'owner', 'customer_name', 'employee_name', 'appointment_datetime', 'is_completed']
+        fields = ['url', 'id', 'owner', 'customer', 'employee', 'appointment_datetime', 'is_completed']
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
@@ -21,12 +21,14 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class CustomerSerializer(serializers.HyperlinkedModelSerializer):
+    owner = serializers.ReadOnlyField(source='owner.username')
+
     class Meta:
         model = Customer
-        fields = ['url', 'id', 'first_name', 'last_name', 'email', 'phone', 'last_appointment_date']
+        fields = ['url', 'id', 'owner', 'first_name', 'last_name', 'email', 'phone', 'last_appointment_date']
 
 
 class EmployeeSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Employee
-        fields = ['url', 'id', 'first_name', 'last_name', 'email', 'phone', 'is_active', 'is_manager']
+        fields = ['url', 'id', 'user', 'email', 'phone']
