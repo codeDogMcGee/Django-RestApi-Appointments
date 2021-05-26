@@ -5,7 +5,20 @@
 ### REST API using Django Rest Framework. 
 This project will be used as the boilerplate for a custom appointments web app for a nail salon in Denver, Colorado.
 
-The appointment_api and appointment_website are seperate projects that each require a python environment with requirements found in requirements.txt.
+The appointment_api and appointment_website are seperate apps but share a python environment in the top level of the project. To create
+a python environment, navigate to top directory in the project:
+```
+python -m venv venv
+```
+Then to activate the environment in Windows CMD:
+```
+venv\venv\activate.bat
+```
+or on Linux or Mac:
+```
+venv/venv/activate
+```
+
 
 To start the api:
 ```

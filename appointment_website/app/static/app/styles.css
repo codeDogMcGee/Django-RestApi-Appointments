@@ -1,0 +1,27 @@
+:root {
+    --main-text-color: #606060;
+}
+
+body {
+
+    font-family: "Helvetica", Helvetica, Arial, sans-serif;
+    font-size: 2rem;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    color: var(--main-text-color);
+}
+
+header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--main-text-color);
+}
+
+header h1, a {
+    text-decoration: none;
+    color: var(--main-text-color)
+}

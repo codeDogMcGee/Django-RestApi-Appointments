@@ -62,7 +62,7 @@ class CustomerSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Customer
-        fields = ['id', 'first_name', 'email', 'upcoming_appointments', 'last_appointment']
+        fields = ['url', 'id', 'first_name', 'email', 'upcoming_appointments', 'last_appointment']
 
 
 class EmployeeAdminSerializer(serializers.HyperlinkedModelSerializer):
@@ -96,4 +96,4 @@ class EmployeeSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Employee
-        fields = ['id', 'first_name', 'email', 'upcoming_appointments']
+        fields = ['url', 'id', 'first_name', 'email', 'upcoming_appointments']

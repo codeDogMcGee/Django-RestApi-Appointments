@@ -1,6 +1,5 @@
 {% load static %}
 <link rel="stylesheet" type="text/css" href="{% static 'app/styles.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'app/index.css' %}">
 
 <!DOCTYPE html>
 <html lang="en">
@@ -11,15 +10,26 @@
     <title>Appointments</title>
 </head>
 <body>
-
     <header>
         <a href="/"><h2>Home</h2></a>
         <nav>
             <a href="/appointments/">Appointments</a>
         </nav>
     </header>
-    
 
-    
+    <h1>Appointments</h1>
+
+    {% if appointments %}
+        <ul>
+            {% for appointment in appointments %}
+                {% for employee in appointment.employee_set.all %}
+                    <li>{{ employee.first_name }} - {{ appointment.customer.first_name }} - {{ appointment.appointment_datetime }}</li>
+                {% endfor %}
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No appointments available.</p>
+    {% endif %}
+
 </body>
 </html>
