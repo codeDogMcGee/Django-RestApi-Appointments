@@ -5,7 +5,23 @@
 ### REST API using Django Rest Framework. 
 This project will be used as the boilerplate for a custom appointments web app for a nail salon in Denver, Colorado.
 
-Basic authentication is used (Django encrypts the passwords) with authentication tokens available to the website front-end. There are 3 types of users:
+The appointment_api and appointment_website are seperate projects that each require a python environment with requirements found in requirements.txt.
+
+To start the api:
+```
+cd appointment_api
+python manage.py migrate
+python manage.py makemigrations api
+python manage.py createsuperuser
+python manage.py runserver 8080
+```
+
+Token authentication is used, so users must have a token to be able to access the api. Tokens can be generated via command-line:
+```
+python manage.py drf_create_token username
+```
+
+There are 3 types of users:
 1. admin
     - has permissions for everything
 2. manager
@@ -17,3 +33,9 @@ Basic authentication is used (Django encrypts the passwords) with authentication
 
 ### Django Website Front-End
 Django website that connects to the appointments API and lets users view and make appointments.
+To start the website:
+```
+cd appointment_website
+python manage.py migrate
+python manage.py runserver 8000
+```
