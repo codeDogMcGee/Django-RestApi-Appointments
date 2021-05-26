@@ -1,0 +1,11 @@
+<h1>Appointments</h1>
+
+{% if results %}
+    <ul>
+        {% for appointment in results %}
+        <li>{{ appointment.appointment_datetime }}</li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No appointments available.</p>
+{% endif %}

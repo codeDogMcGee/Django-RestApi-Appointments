@@ -1,5 +1,6 @@
 venv
 .idea
+.vscode
 secrets.*
 __pycache__
 db.sqlite3
