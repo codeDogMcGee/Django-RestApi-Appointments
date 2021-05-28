@@ -22,9 +22,8 @@
     {% if appointments %}
         <ul>
             {% for appointment in appointments %}
-                {% for employee in appointment.employee_set.all %}
-                    <li>{{ employee.first_name }} - {{ appointment.customer.first_name }} - {{ appointment.appointment_datetime }}</li>
-                {% endfor %}
+                    <li>{{ appointment.employee_first_name }} - {{ appointment.customer_first_name }} - {{ appointment.appointment_datetime }}</li>
+
             {% endfor %}
         </ul>
     {% else %}
