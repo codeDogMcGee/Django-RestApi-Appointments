@@ -1,4 +1,5 @@
 from django.urls import path, include
+from rest_framework.authtoken.views import obtain_auth_token
 from rest_framework.routers import DefaultRouter
 from api import views
 
@@ -14,5 +15,6 @@ urlpatterns = [
 
 # include login and logout views
 urlpatterns += [
-    path('api-auth', include('rest_framework.urls')),
+    # path('api-auth', include('rest_framework.urls')),  # provides login/logout views, not needed with token auth
+    path('api-token-auth/', obtain_auth_token, name='api_token_auth'), # provides post endpoint to receive api tokens
 ]
