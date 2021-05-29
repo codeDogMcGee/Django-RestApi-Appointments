@@ -1,5 +1,4 @@
-from django.http.response import HttpResponse, HttpResponseRedirect
-from app.forms import NameForm
+from app.forms import AppointmentForm
 from datetime import datetime
 from django.shortcuts import render
 
@@ -17,7 +16,7 @@ def make_appointment(request):
     employee = ''
 
     if request.method == 'POST':
-        form = NameForm(request.POST)
+        form = AppointmentForm(request.POST)
         if form.is_valid():
             
             print('\n\nCleaned Data:\n', form.cleaned_data, '\n\n')
@@ -43,7 +42,7 @@ def make_appointment(request):
                 employee = employee_content['first_name']
             
     else:
-        form = NameForm()
+        form = AppointmentForm()
 
     return render(request, 'app/make-appointment.html', {'form': form, 
                                                          'customer_first_name': customer_first_name, 

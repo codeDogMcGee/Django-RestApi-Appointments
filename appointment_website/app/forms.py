@@ -1,7 +1,10 @@
-from django.db import models
+from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django import forms
 import datetime
 
+from django.forms import fields
+
+from .models import CustomUser
 from .helpers import get_json_from_api
 
 
@@ -30,7 +33,7 @@ def get_times():
     # return a tuple used by forms.Select (drop-down) in a format of (key, value)
     return output
 
-class NameForm(forms.Form):
+class AppointmentForm(forms.Form):
     customer_first_name = forms.CharField(label='First name', max_length=100)
     appointment_date = forms.DateField(
         label='Date', 
@@ -39,3 +42,16 @@ class NameForm(forms.Form):
     )
     appointment_time = forms.CharField(label='Time', widget=forms.Select(choices=get_times()))
     employee = forms.CharField(label='Nail Artist', widget=forms.Select(choices=get_employees()))
+
+
+class CustomUserCreationForm(UserCreationForm):
+    
+    class Meta:
+        model = CustomUser
+        fields = ('phone', 'email', 'name',)
+
+class CustomUserChangeForm(UserChangeForm):
+
+    class Meta:
+        model = CustomUser
+        fields = ('phone', 'email', 'name',)
