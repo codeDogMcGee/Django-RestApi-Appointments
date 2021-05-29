@@ -1,0 +1,20 @@
+{% extends 'app/base.html' %}
+
+
+
+{% block content %}
+    
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'app/make-appointment.css' %}">
+
+    <form action="/make-appointment/" method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <input type="submit" value="OK">
+    </form>
+
+    <p>Customer: {{customer_first_name}}</p>
+    <p>Employee: {{employee}}</p>
+    <p>Appointment Time: {{appointment_datetime}}</p>
+
+{% endblock %}

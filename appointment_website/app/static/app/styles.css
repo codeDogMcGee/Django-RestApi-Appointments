@@ -25,3 +25,9 @@ header h1, a {
     text-decoration: none;
     color: var(--main-text-color)
 }
+
+header nav{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+}
