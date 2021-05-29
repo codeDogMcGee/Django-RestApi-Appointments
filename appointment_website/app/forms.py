@@ -1,6 +1,7 @@
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django import forms
 import datetime
+from django.contrib.auth.models import Group
 
 from django.forms import fields
 
@@ -45,13 +46,13 @@ class AppointmentForm(forms.Form):
 
 
 class CustomUserCreationForm(UserCreationForm):
-    
+
     class Meta:
         model = CustomUser
-        fields = ('phone', 'email', 'name',)
+        fields = ('phone', 'email', 'name', 'group',)
 
 class CustomUserChangeForm(UserChangeForm):
 
     class Meta:
         model = CustomUser
-        fields = ('phone', 'email', 'name',)
+        fields = ('phone', 'email', 'name', 'group',)

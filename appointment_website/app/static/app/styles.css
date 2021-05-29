@@ -26,6 +26,10 @@ header h1, a {
     color: var(--main-text-color)
 }
 
+nav a {
+    font-size: 1rem;
+}
+
 header nav{
     display: flex;
     flex-direction: column;

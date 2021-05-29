@@ -2,8 +2,8 @@
 
 {% block content %}
     
-{% load static %}
-<link rel="stylesheet" type="text/css" href="{% static 'app/make-appointment.css' %}">
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'app/make-appointment.css' %}">
 
     <form action="/make-appointment/" method="post">
         {% csrf_token %}

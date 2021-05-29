@@ -1,8 +1,11 @@
-from app.forms import AppointmentForm
+from django.views.decorators.csrf import csrf_protect
+from app.forms import AppointmentForm, CustomUserCreationForm, CustomUserChangeForm
+from django.contrib.auth.models import Group
+from django.contrib.auth import authenticate
 from datetime import datetime
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 
-from .helpers import get_json_from_api, API_MAIN_ROUTE
+from .helpers import get_json_from_api, post_json_to_api, API_MAIN_ROUTE
 
 
 def index(request):
@@ -102,3 +105,59 @@ def appointments_list(request):
 
     return render(request, 'app/appointments.html', context)
 
+
+@csrf_protect
+def create_user(request):
+    # Initialize the groups to make sure they are present
+    Group.objects.get_or_create(name='Employees')
+    Group.objects.get_or_create(name='Customers')
+
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+
+            form.save()
+
+            print('\n\nCleaned Data:\n', form.cleaned_data, '\n\n')
+
+
+            authenticate(
+                phone = form.cleaned_data['phone'], 
+                email = form.cleaned_data['email'], 
+                name = form.cleaned_data['name'], 
+                group = form.cleaned_data['group'],
+                password = form.cleaned_data['password1']
+            )
+
+            url_endpoint = form.cleaned_data['group'].name.lower()
+
+            print('\n\Endpoint:\n', url_endpoint, '\n\n')
+
+            status = post_json_to_api(url_endpoint, {'first_name': form.cleaned_data['name'], 'email': form.cleaned_data['email']})
+
+            print('\n\nStatus:\n', status, '\n\n')
+
+
+            return redirect('create-user')
+    else:
+        form = CustomUserCreationForm()
+
+    return render(request, 'app/create-user.html', {'form': form})
+
+
+
+def modify_user(request):
+    # Initialize the groups to make sure they are present
+    Group.objects.get_or_create(name='Employees')
+    Group.objects.get_or_create(name='Customers')
+
+    if request.method == 'POST':
+        form = CustomUserChangeForm(request.POST)
+        if form.is_valid():
+            
+            print('\n\nCleaned Data:\n', form.cleaned_data, '\n\n')
+            
+    else:
+        form = CustomUserChangeForm()
+
+    return render(request, 'app/modify-user.html', {'form': form})

@@ -47,7 +47,7 @@ class EmployeeViewSet(viewsets.ModelViewSet):
     `update` and `destroy` actions.
     """
     queryset = Employee.objects.all()
-    permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_serializer_class(self):
         if self.request.user.is_staff:

@@ -1,0 +1,14 @@
+{% extends 'app/base.html' %}
+
+{% block content %}
+
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'app/create-user.css' %}">
+
+    <form action="/create-user/" method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <input type="submit" value="Create User">
+    </form>
+
+{% endblock %}

@@ -1,0 +1,12 @@
+form {
+ font-size: 1rem;
+}
+
+.errorlist {
+    font-size: .8rem;
+    color: red;
+}
+
+form ul {
+    font-size: .8rem;
+}
