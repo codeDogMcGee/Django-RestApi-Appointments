@@ -3,18 +3,19 @@ from rest_framework.authtoken.views import obtain_auth_token
 from rest_framework.routers import DefaultRouter
 from api import views
 
+# register ViewSets with the router
 router = DefaultRouter()
-router.register(r'appointments', views.AppointmentViewSet)
+router.register(r'past-appointments', views.PastAppointmentViewSet)
 router.register(r'users', views.UserViewSet)
-router.register(r'employees', views.EmployeeViewSet)
-router.register(r'customers', views.CustomerViewSet)
 
+# include other views
 urlpatterns = [
     path('', include(router.urls)),
+    path('appointments/', views.AppointmentList.as_view(), name='appointment-list'),
+    path('appointment-detail/<int:pk>/', views.AppointmentDetail.as_view(), name='appointment-detail'),
 ]
 
-# include login and logout views
+# include auth views
 urlpatterns += [
-    # path('api-auth', include('rest_framework.urls')),  # provides login/logout views, not needed with token auth
     path('api-token-auth/', obtain_auth_token, name='api_token_auth'), # provides post endpoint to receive api tokens
 ]
