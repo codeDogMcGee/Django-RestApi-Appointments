@@ -5,14 +5,16 @@ from api import views
 
 # register ViewSets with the router
 router = DefaultRouter()
-router.register(r'past-appointments', views.PastAppointmentViewSet)
 router.register(r'users', views.UserViewSet)
+router.register(r'helpers', views.HelpersViewSet)
 
 # include other views
 urlpatterns = [
     path('', include(router.urls)),
     path('appointments/', views.AppointmentList.as_view(), name='appointment-list'),
-    path('appointment-detail/<int:pk>/', views.AppointmentDetail.as_view(), name='appointment-detail'),
+    path('appointment/<int:pk>/', views.AppointmentDetail.as_view(), name='appointment-detail'),
+    path('past-appointments/', views.PastAppointmentList.as_view(), name='past-appointment-list'),
+    path('past-appointment/<int:pk>/', views.PastAppointmentDetail.as_view(), name='past-appointment-detail'),
 ]
 
 # include auth views
