@@ -1,11 +1,12 @@
 from django.views.decorators.csrf import csrf_protect
-from app.forms import AppointmentForm, CustomUserCreationForm, CustomUserChangeForm
+from app.forms import CustomUserCreationForm, CustomUserChangeForm, AppointmentForm
 from django.contrib.auth.models import Group
 from django.contrib.auth import authenticate
-from datetime import datetime
+from django.utils import timezone
 from django.shortcuts import redirect, render
 
-from .helpers import get_json_from_api, post_json_to_api, API_MAIN_ROUTE
+from .helpers import get_json_from_api, post_json_to_api, APPOINTMENT_LENGTH_MINTUES
+from .models import CustomUser
 
 
 def index(request):
@@ -13,44 +14,52 @@ def index(request):
 
 
 def make_appointment(request):
-
-    customer_first_name = ''
-    appointment_datetime = ''
-    employee = ''
+    customer_display_name = ''
+    employee_display_name = ''
+    appointment_display_time = ''
 
     if request.method == 'POST':
         form = AppointmentForm(request.POST)
         if form.is_valid():
             
             print('\n\nCleaned Data:\n', form.cleaned_data, '\n\n')
-            
-            customer_first_name = form.cleaned_data['customer_first_name']
+
             appointment_date = form.cleaned_data['appointment_date']
-            
             appointment_time = form.cleaned_data['appointment_time']
-            appointment_time = datetime.strptime(appointment_time, '%Y-%m-%d %H:%M:%S')
+            appointment_start_time = timezone.datetime(appointment_date.year, appointment_date.month, appointment_date.day,
+                                                       appointment_time.hour, appointment_time.minute, appointment_time.second)
 
-            appointment_datetime = datetime(appointment_date.year, appointment_date.month, appointment_date.day,
-                                            appointment_time.hour, appointment_time.minute, appointment_time.second)
+            appointment_end_time = appointment_start_time + timezone.timedelta(minutes=APPOINTMENT_LENGTH_MINTUES)
 
-            endpoint = form.cleaned_data['employee']
-            endpoint = endpoint.replace(API_MAIN_ROUTE, '') 
 
-            employee_content_object = get_json_from_api(endpoint)
-            employee_status = employee_content_object['status']
-            employee_content = employee_content_object['content']
 
-            employee = 'EMPLOYEE NOT FOUND'
-            if employee_status == 200 and len(employee_content) > 0:
-                employee = employee_content['first_name']
+            print('\n\nAPPOINTMENT TO SEND:\n', f'Employee {form.cleaned_data["employee"].id} | Customer {form.cleaned_data["customer"].id} | Start Time {appointment_start_time} | End Time {appointment_end_time}\n\n')
             
+            appointment_object = {
+                'start_time': appointment_start_time,
+                'end_time': appointment_end_time,
+                'employee_id': form.cleaned_data['employee'].id,
+                'customer_id': form.cleaned_data['customer'].id
+            }
+
+            response_object = post_json_to_api('appointments', appointment_object)
+            if response_object['status'] == 201:    
+                customer_display_name = form.cleaned_data['customer'].name
+                employee_display_name = form.cleaned_data['employee'].name
+                appointment_display_time = appointment_start_time
+                
+            else:
+                print('\n\nERROR CREATING APPOINTMENT:\n', f'status={response_object["status"]}, message={response_object["content"]}')
+                redirect('make-appointment')
+
+                
     else:
         form = AppointmentForm()
 
     return render(request, 'app/make-appointment.html', {'form': form, 
-                                                         'customer_first_name': customer_first_name, 
-                                                         'appointment_datetime': appointment_datetime,
-                                                         'employee': employee
+                                                         'customer_name': customer_display_name, 
+                                                         'employee_name': employee_display_name,
+                                                         'appointment_start_time': appointment_display_time
                                                          })
 
 
@@ -58,46 +67,19 @@ def appointments_list(request):
     
     # get all appointments from the api
     json_response = get_json_from_api('appointments')
-    appointments_status = json_response['status']
-    appointments_content = json_response['content']['results']
 
-    # pull down all of the employees in one call since they are all likely to be used
-    # and it's assumed there aren't hundreds of thousands of employees making appointments,
-    # which would could be too big an object to pull through the api
-    json_response = get_json_from_api('employees')
-    employees_status = json_response['status']
-    employees_content = json_response['content']['results']
+    print('\n\nAPPOINTMENTS:\n', json_response['status'], json_response['content'], '\n\n')
+
+    appointments_status = json_response['status']
+    appointments_content = json_response['content']
 
     for appointment in appointments_content:
 
         # adjust format of appointement time
-        date_time_list = appointment['appointment_datetime'].split('T')  # Django's timezone stamp has a T in the time we don't need
-        time_string = date_time_list[-1]
+        start_time_list = appointment['start_time'].split('T')  # Django's timezone stamp has a T in the time we don't need
+        time_string = start_time_list[-1]
         time_string = time_string[:5]
-        appointment['appointment_datetime'] = ' '.join([date_time_list[0], time_string])
-
-        ### add new elements to each appointment object with foreign key info        
-        # get employee's first name
-        appointment_employee_url = appointment['employee']
-        employee_first_name = 'EMPLOYEE NAME NOT FOUND'
-        if employees_status == 200:
-            for employee in employees_content:
-                if employee['url'] == appointment_employee_url:
-                    employee_first_name = employee['first_name']
-                    break
-        appointment['employee_first_name'] = employee_first_name
-
-        # get customer's first name
-        # we make a call to the api each time since to avoid pulling too much data over the api
-        # since we don't know how many customers there might be
-        endpoint = appointment['customer'].replace(API_MAIN_ROUTE, '') 
-        customer_content_object = get_json_from_api(endpoint)
-        customer_status = customer_content_object['status']
-        customer_content = customer_content_object['content']
-        if customer_status == 200 and len(customer_content) > 0:
-            appointment['customer_first_name'] = customer_content['first_name']
-        else:
-            appointment['customer_first_name'] = 'CUSTOMER NAME NOT FOUND'
+        appointment['start_time'] = ' '.join([start_time_list[0], time_string])
 
     context = {}
     if appointments_status == 200:
@@ -129,16 +111,7 @@ def create_user(request):
                 password = form.cleaned_data['password1']
             )
 
-            url_endpoint = form.cleaned_data['group'].name.lower()
-
-            print('\n\Endpoint:\n', url_endpoint, '\n\n')
-
-            status = post_json_to_api(url_endpoint, {'first_name': form.cleaned_data['name'], 'email': form.cleaned_data['email']})
-
-            print('\n\nStatus:\n', status, '\n\n')
-
-
-            return redirect('create-user')
+            return redirect('make-appointment')
     else:
         form = CustomUserCreationForm()
 

@@ -7,7 +7,7 @@
     {% if appointments %}
         <ul>
             {% for appointment in appointments %}
-                    <li>{{ appointment.employee_first_name }} - {{ appointment.customer_first_name }} - {{ appointment.appointment_datetime }}</li>
+                    <li>{{ appointment.start_time }}</li>
 
             {% endfor %}
         </ul>

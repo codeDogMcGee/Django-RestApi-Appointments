@@ -1,48 +1,52 @@
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django import forms
-import datetime
-from django.contrib.auth.models import Group
-
-from django.forms import fields
+from django.forms import ModelChoiceField
+from django.utils import timezone
+from django.utils.formats import time_format
 
 from .models import CustomUser
-from .helpers import get_json_from_api
+from .helpers import format_phone_number, APPOINTMENT_LENGTH_MINTUES
+    
 
-
-def get_employees():
-    json_response = get_json_from_api('employees')
-    employees_status = json_response['status']
-    employees_content = json_response['content']['results']
-
-    output = []
-    if employees_status == 200:
-        output = employees_content
-        output = [(employee['url'], employee['first_name']) for employee in employees_content]
-    # return a tuple used by forms.Select (drop-down) in a format of (key, value)
-    return output
-
-def get_times():
-    start_time = datetime.datetime(1,1,1,7,0,0)
-    end_time = datetime.datetime(1,1,1,18,30,0)
-    appointment_length_minutes = 30
+def get_appointment_times():
+    start_time = timezone.datetime(2000,1,1,7,0,0)
+    end_time = timezone.datetime(2000,1,1,18,30,0)
 
     output = []
     _time = start_time
     while _time <= end_time:
-        output.append((_time, datetime.datetime.strftime(_time, '%I:%M %p')))
-        _time += datetime.timedelta(minutes=appointment_length_minutes)
+        output.append((_time, time_format(_time, 'h:i a')))
+        _time += timezone.timedelta(minutes=APPOINTMENT_LENGTH_MINTUES)
     # return a tuple used by forms.Select (drop-down) in a format of (key, value)
     return output
 
+
+class CustomerChoiceField(ModelChoiceField):
+    def label_from_instance(self, obj: CustomUser) -> str:
+        return super().label_from_instance(f'{obj.name} | {format_phone_number(obj.phone)}')
+
+class EmployeeChoiceField(ModelChoiceField):
+    def label_from_instance(self, obj: CustomUser) -> str:
+        return super().label_from_instance(f'{obj.name}')
+
+
 class AppointmentForm(forms.Form):
-    customer_first_name = forms.CharField(label='First name', max_length=100)
+    def __init__(self, *args, **kwargs):
+        # self.user = kwargs.pop('user', None) # can access current user by passing to instance
+        super(AppointmentForm, self).__init__(*args, **kwargs)
+        self.fields['employee'].queryset = CustomUser.objects.filter(group__name='Employees')
+        self.fields['customer'].queryset = CustomUser.objects.filter(group__name='Customers')
+
+    employee = EmployeeChoiceField(queryset=None, widget=forms.Select, required=True)
+    customer = CustomerChoiceField(queryset=None, widget=forms.Select, required=True)
+
     appointment_date = forms.DateField(
         label='Date', 
         input_formats=['%m/%d/%Y'], #  %H:%M
         widget = forms.DateInput(attrs={'class': 'datepicker', 'is_required': 'True', 'id':'datepicker-1'})
     )
-    appointment_time = forms.CharField(label='Time', widget=forms.Select(choices=get_times()))
-    employee = forms.CharField(label='Nail Artist', widget=forms.Select(choices=get_employees()))
+
+    appointment_time = forms.DateTimeField(label='Time', widget=forms.Select(choices=get_appointment_times()))  
 
 
 class CustomUserCreationForm(UserCreationForm):

@@ -6,8 +6,10 @@ from . import api_auth
 API_TOKEN = api_auth.get_api_token()
 API_MAIN_ROUTE = 'http://127.0.0.1:8080/'
 
+APPOINTMENT_LENGTH_MINTUES = 30
 
-def get_json_from_api(url_endpoint):
+
+def get_json_from_api(url_endpoint: str) -> dict[str, object]:
     response = {}
     try:
         if len(url_endpoint) > 0:
@@ -25,7 +27,8 @@ def get_json_from_api(url_endpoint):
         output = {'status': response_code, 'content': response_content}
     return output
 
-def post_json_to_api(url_endpoint, json_object):
+
+def post_json_to_api(url_endpoint: str, json_object: object) -> dict[str, object]:
     response = {}
     try:
         if len(url_endpoint) > 0:
@@ -39,11 +42,26 @@ def post_json_to_api(url_endpoint, json_object):
     else:    
         response_code = response.status_code
         response_content = response.content.decode('utf-8')  # first convert the data from bytes to text
+
+        print('\n\nResponse:\n', response_code, response_content)
+
         response_content = json.loads(response_content)  # then convert the text to json
         output = {'status': response_code, 'content': response_content}
     return output
 
 
+def format_phone_number(phone_number: str) -> str:
+    if len(phone_number) == 10:
+        try:
+            int(phone_number) # make sure it's all numbers
+            return f'({phone_number[:3]}) {phone_number[3:6]}-{phone_number[6:]}'
+        except:
+            pass
+    return phone_number
+
+
 def _create_request_url(endpoint):
     endpoint = endpoint + '/' if endpoint[-1] != '/' else endpoint
     return f'{API_MAIN_ROUTE}{endpoint}'
+
+
