@@ -107,6 +107,34 @@ def _execute_helper_functions():
     sync_to_async(_delete_old_appointments(), thread_sensitive=True)
 
 
+class AppointmentsForEmployeeIdView(APIView):
+    """
+    Read all appointments for a specific employee_id
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, pk):
+        _execute_helper_functions()
+
+        appointments = Appointment.objects.filter(employee_id=pk)
+        serializer = AppointmentSerializer(appointments, many=True)
+        return Response(serializer.data)
+
+
+class AppointmentsForCustomerIdView(APIView):
+    """
+    Read all appointments for a specific employee_id
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, pk):
+        _execute_helper_functions()
+
+        appointments = Appointment.objects.filter(customer_id=pk)
+        serializer = AppointmentSerializer(appointments, many=True)
+        return Response(serializer.data)
+
+
 class AppointmentList(APIView):
     """
     Read all appointments, or create new appointment

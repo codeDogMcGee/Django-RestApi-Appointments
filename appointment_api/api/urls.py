@@ -15,6 +15,8 @@ urlpatterns = [
     path('appointment/<int:pk>/', views.AppointmentDetail.as_view(), name='appointment-detail'),
     path('past-appointments/', views.PastAppointmentList.as_view(), name='past-appointment-list'),
     path('past-appointment/<int:pk>/', views.PastAppointmentDetail.as_view(), name='past-appointment-detail'),
+    path('appointments-employee/<int:pk>/', views.AppointmentsForEmployeeIdView.as_view(), name='appointments-employee'),
+    path('appointments-customer/<int:pk>/', views.AppointmentsForCustomerIdView.as_view(), name='appointments-customer'),
 ]
 
 # include auth views
