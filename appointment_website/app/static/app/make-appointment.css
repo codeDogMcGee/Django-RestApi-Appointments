@@ -1,3 +1,7 @@
 div.ui-datepicker {
     font-size: 1rem;
 }
+
+.error-msg {
+    color: red;
+}

@@ -30,24 +30,19 @@ class EmployeeChoiceField(ModelChoiceField):
         return super().label_from_instance(f'{obj.name}')
 
 
-class AppointmentForm(forms.Form):
-    def __init__(self, *args, **kwargs):
-        # self.user = kwargs.pop('user', None) # can access current user by passing to instance
-        super(AppointmentForm, self).__init__(*args, **kwargs)
-        self.fields['employee'].queryset = CustomUser.objects.filter(group__name='Employees')
-        self.fields['customer'].queryset = CustomUser.objects.filter(group__name='Customers')
-
-    employee = EmployeeChoiceField(queryset=None, widget=forms.Select, required=True)
-    customer = CustomerChoiceField(queryset=None, widget=forms.Select, required=True)
-
+class CustomerAppointmentForm(forms.Form):
+    employee = EmployeeChoiceField(queryset=CustomUser.objects.filter(group__name='Employees'), 
+                                   widget=forms.Select, 
+                                   required=True)
     appointment_date = forms.DateField(
         label='Date', 
         input_formats=['%m/%d/%Y'], #  %H:%M
         widget = forms.DateInput(attrs={'class': 'datepicker', 'is_required': 'True', 'id':'datepicker-1'})
     )
-
     appointment_time = forms.DateTimeField(label='Time', widget=forms.Select(choices=get_appointment_times()))  
 
+class EmployeeAppointmentForm(CustomerAppointmentForm):
+    customer = CustomerChoiceField(queryset=CustomUser.objects.filter(group__name='Customers'), widget=forms.Select, required=True)
 
 class CustomUserCreationForm(UserCreationForm):
 

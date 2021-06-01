@@ -2,6 +2,7 @@ import requests
 import json
 
 from . import api_auth
+from .models import CustomUser
 
 API_TOKEN = api_auth.get_api_token()
 API_MAIN_ROUTE = 'http://127.0.0.1:8080/'
@@ -42,9 +43,6 @@ def post_json_to_api(url_endpoint: str, json_object: object) -> dict[str, object
     else:    
         response_code = response.status_code
         response_content = response.content.decode('utf-8')  # first convert the data from bytes to text
-
-        print('\n\nResponse:\n', response_code, response_content)
-
         response_content = json.loads(response_content)  # then convert the text to json
         output = {'status': response_code, 'content': response_content}
     return output
@@ -60,8 +58,15 @@ def format_phone_number(phone_number: str) -> str:
     return phone_number
 
 
-def _create_request_url(endpoint):
+def _create_request_url(endpoint: str) -> str:
     endpoint = endpoint + '/' if endpoint[-1] != '/' else endpoint
     return f'{API_MAIN_ROUTE}{endpoint}'
 
 
+def get_groups_for_user(user: CustomUser) -> list[str]:
+    groups = []
+    if user in CustomUser.objects.filter(group__name='Customers'): # if user in Customers group
+        groups.append('Customers')
+    elif user in CustomUser.objects.filter(group__name='Employees'): # if user in Employees group
+        groups.append('Employees')
+    return groups

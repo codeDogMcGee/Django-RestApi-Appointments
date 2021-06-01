@@ -2,17 +2,18 @@
 
 {% block content %}
 
-    <h3>Appointments</h3>
+    <h3>Appointments for {{ user_name }}:</h3>
 
     {% if appointments %}
         <ul>
             {% for appointment in appointments %}
-                    <li>{{ appointment.start_time }} with {{ appointment.employee.name }}</li>
+                    <li>{{ appointment.start_time_string }} with {{ appointment.other_user.name }}</li>
 
             {% endfor %}
         </ul>
     {% else %}
         <p>No appointments available.</p>
     {% endif %}
+
 
 {% endblock %}

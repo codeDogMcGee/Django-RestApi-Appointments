@@ -5,12 +5,21 @@
     {% load static %}
     <link rel="stylesheet" type="text/css" href="{% static 'app/make-appointment.css' %}">
 
-    <form action="/make-appointment/" method="post" autocomplete="off">
-    {% csrf_token %}
-        {{ form.as_p }}
-        <input type="submit" value="OK">
-    </form>
+    <div class="form-container">
+        <h3>Make an Appointment</h3>
 
-    <p>Appointment scheduled for {{ customer_name }} with {{ employee_name }} at {{ appointment_start_time }}</p>
+        <form action="/make-appointment/" method="post" autocomplete="off">
+        {% csrf_token %}
+            {{ form.as_p}}
+  
+
+            <input type="submit" value="Schedule" class="button">
+        </form>
+    </div>
+    
+
+    {% if error_message != "" %}
+        <p class='error-msg'>Error!  {{ error_message }}</p>
+    {% endif %}
 
 {% endblock %}
