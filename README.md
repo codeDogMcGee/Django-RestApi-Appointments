@@ -49,6 +49,7 @@ Django website that connects to the appointments API and lets users view and mak
 To start the website:
 ```
 cd appointment_website
+python manage.py makemigrations app
 python manage.py migrate
 python manage.py runserver 8000
 ```
