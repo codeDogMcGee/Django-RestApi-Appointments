@@ -52,3 +52,6 @@ cd appointment_website
 python manage.py migrate
 python manage.py runserver 8000
 ```
+Once up and running you can create some users and make appointments:
+![Make appointment](images/make_appointment.PNG)
+![View appointments](images/user_appointments.PNG)
