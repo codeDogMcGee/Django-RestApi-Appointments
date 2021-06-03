@@ -1,3 +1,6 @@
+from django.contrib.auth.models import Group
+from django.utils import timezone
+from django.utils.formats import time_format
 import requests
 import json
 
@@ -48,6 +51,20 @@ def post_json_to_api(url_endpoint: str, json_object: object) -> dict[str, object
     return output
 
 
+def send_api_delete(url_endpoint: str):
+    response = {}
+    try:
+        request_url = _create_request_url(url_endpoint)
+        print('\n\nDELETE REQUEST URL:\n', request_url, '\n\n')
+        response = requests.delete(request_url, headers={'Authorization': f'token {API_TOKEN}'})
+    except Exception as e:
+        raise e
+    
+    status_code = 404 if response == {} else response.status_code
+    return {'status': status_code}
+
+
+
 def format_phone_number(phone_number: str) -> str:
     if len(phone_number) == 10:
         try:
@@ -70,3 +87,24 @@ def get_groups_for_user(user: CustomUser) -> list[str]:
     elif user in CustomUser.objects.filter(group__name='Employees'): # if user in Employees group
         groups.append('Employees')
     return groups
+
+
+def initialize_groups() -> dict[str, (object, bool)]: 
+    groups = ['Employees', 'Customers']
+    output = {}
+    for group_name in groups:
+        output[group_name] = Group.objects.get_or_create(name=group_name) # return tuple (group_object, created_bool)
+    return output
+
+
+def get_appointment_times():
+    start_time = timezone.datetime(2000,1,1,7,0,0)
+    end_time = timezone.datetime(2000,1,1,18,30,0)
+
+    output = []
+    _time = start_time
+    while _time <= end_time:
+        output.append((_time, time_format(_time, 'h:i a')))
+        _time += timezone.timedelta(minutes=APPOINTMENT_LENGTH_MINTUES)
+    # return a tuple used by forms.Select (drop-down) in a format of (key, value)
+    return output

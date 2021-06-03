@@ -8,11 +8,9 @@
     <div class="form-container">
         <h3>Make an Appointment</h3>
 
-        <form action="/make-appointment/" method="post" autocomplete="off">
+        <form method="post" autocomplete="off">
         {% csrf_token %}
             {{ form.as_p}}
-  
-
             <input type="submit" value="Schedule" class="button">
         </form>
     </div>

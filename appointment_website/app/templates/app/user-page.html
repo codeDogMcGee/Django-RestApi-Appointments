@@ -2,18 +2,30 @@
 
 {% block content %}
 
-    <h3>Appointments for {{ user_name }}:</h3>
+    <div class="list-container">
+        <h3>Appointments for {{ user_name }}</h3>
 
-    {% if appointments %}
-        <ul>
-            {% for appointment in appointments %}
-                    <li>{{ appointment.start_time_string }} with {{ appointment.other_user.name }}</li>
+        {% if appointments %}
+            <ul>
+                {% for appointment_id, appointment in appointments.items %}
+                        <li>
+                            <p>{{ appointment.start_time_string }} with {{ appointment.other_user.name }}</p>
+                            {% comment %} 
+                            <form action"/delete-appointment/{{ appointment.id }}/?next={{ request.path }}" method="DELETE">
+                             {% endcomment %}
+                            <form method="post">
+                            {% csrf_token %}
+                                <input type="hidden" name="delete_appointment_id" value="{{ appointment_id }}">
+                                <input type="submit" value="Cancel" class="form-item-button">
+                            </form>
+                        </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No appointments available.</p>
+        {% endif %}
+    </div>
 
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>No appointments available.</p>
-    {% endif %}
-
+    
 
 {% endblock %}

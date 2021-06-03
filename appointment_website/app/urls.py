@@ -12,6 +12,7 @@ urlpatterns = [
     path('create-user/', views.create_user, name='create-user'),
     # path('modify-user/', views.modify_user, name='modify-user'),
     path('user-page/', views.UserPageView.as_view(), name='user-page'),
+    # path('delete-appointment/<int:pk>/', views.delete_appointment_view, name='delete-appointment'),
 
     path('', include('django.contrib.auth.urls')),  # provides registration urls
 ]
