@@ -128,7 +128,7 @@ STATIC_URL = '/static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# LOGIN_REDIRECT_URL = 'app/user-page.html'
+LOGIN_REDIRECT_URL = 'index'
 
 # Allow the request object to be available in each request
 TEMPLATE_CONTEXT_PROCESSORS = (

@@ -1,10 +1,9 @@
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django import forms
 from django.forms import ModelChoiceField
-from django.forms.forms import Form
 
 from .models import CustomUser
-from .helpers import format_phone_number, get_appointment_times, APPOINTMENT_LENGTH_MINTUES
+from .helpers import format_phone_number, get_appointment_times, MAIN_DATE_FORMAT
 
 
 class CustomerChoiceField(ModelChoiceField):
@@ -23,14 +22,16 @@ class CustomerAppointmentForm(forms.Form):
                                    required=True)
     appointment_date = forms.DateField(
         label='Date', 
-        input_formats=['%m/%d/%Y'], #  %H:%M
+        input_formats=['%m/%d/%Y', '%m-%d-%Y'],
         widget = forms.DateInput(attrs={'class': 'datepicker', 'is_required': 'True', 'id':'datepicker-1'})
     )
-    appointment_time = forms.DateTimeField(label='Time', widget=forms.Select(choices=get_appointment_times()))  
+    appointment_time = forms.TimeField(label='Time', widget=forms.Select(choices=get_appointment_times()))  
 
 
 class EmployeeAppointmentForm(CustomerAppointmentForm):
-    customer = CustomerChoiceField(queryset=CustomUser.objects.filter(group__name='Customers'), widget=forms.Select, required=True)
+    customer = CustomerChoiceField(queryset=CustomUser.objects.filter(group__name='Customers'), 
+                                   widget=forms.Select, 
+                                   required=True)
 
 
 class CustomUserCreationForm(UserCreationForm):

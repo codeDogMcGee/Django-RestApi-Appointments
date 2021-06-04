@@ -2,23 +2,43 @@
 
 {% block content %}
 
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'app/user-page.css' %}">
+
     <div class="list-container">
         <h3>Appointments for {{ user_name }}</h3>
 
         {% if appointments %}
             <ul>
                 {% for appointment_id, appointment in appointments.items %}
-                        <li>
-                            <p>{{ appointment.start_time_string }} with {{ appointment.other_user.name }}</p>
+                        <li class="appointment-list-item">
+
+                            <div class="appointment-description">
+                                {{ appointment.start_time_string }} with {{ appointment.other_user.name }}
+                            </div>
                             {% comment %} 
-                            <form action"/delete-appointment/{{ appointment.id }}/?next={{ request.path }}" method="DELETE">
-                             {% endcomment %}
-                            <form method="post">
+                                Change appointment button
+                            {% endcomment %}
+                            <form method="get" action="/appointment/{{ appointment_id }}/" class="change-appointment-form">
+                                <input type="submit" value="Modify" class="form-item-button">
+                            </form>
+                           
+                           {% comment %} 
+                                Delete appointment button
+                            {% endcomment %}
+                            <form method="post" class="delete-appointment-form">
                             {% csrf_token %}
                                 <input type="hidden" name="delete_appointment_id" value="{{ appointment_id }}">
                                 <input type="submit" value="Cancel" class="form-item-button">
                             </form>
+                            
                         </li>
+                        {% comment %} 
+                            Don't include the bottom border on the last item
+                        {% endcomment %}
+                        {% if last_appointment_id != Null and appointment.id != last_appointment_id %}
+                            <div class="list-item-border"></div>
+                        {% endif %}       
                 {% endfor %}
             </ul>
         {% else %}
@@ -26,6 +46,8 @@
         {% endif %}
     </div>
 
-    
+    {% if error_message and error_message != "" %}
+        <p class='error-msg'>Error!  {{ error_message }}</p>
+    {% endif %}
 
 {% endblock %}

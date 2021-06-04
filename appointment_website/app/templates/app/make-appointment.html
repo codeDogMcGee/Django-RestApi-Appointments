@@ -6,17 +6,26 @@
     <link rel="stylesheet" type="text/css" href="{% static 'app/make-appointment.css' %}">
 
     <div class="form-container">
-        <h3>Make an Appointment</h3>
+        <h3>{{ page_header }}</h3>
 
-        <form method="post" autocomplete="off">
+        {% comment %} 
+        Provide two form types, one for creating a new appointment (POST),
+        and one for changing an existing appointment (PUT).
+        {% endcomment %}
+        {% if submit_method_type == 'post' %}
+            <form action={% url 'make-appointment' %} method='post' autocomplete="off">
+        {% else %}
+            <form action={% url 'appointment-detail' appointment_id %} method='post' autocomplete="off">
+        {% endif %}
+
         {% csrf_token %}
             {{ form.as_p}}
-            <input type="submit" value="Schedule" class="button">
+            <input type="submit" value={{ submit_button_text }} class="button">
         </form>
     </div>
     
 
-    {% if error_message != "" %}
+    {% if error_message and error_message != "" %}
         <p class='error-msg'>Error!  {{ error_message }}</p>
     {% endif %}
 

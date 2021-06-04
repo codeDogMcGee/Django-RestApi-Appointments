@@ -1,17 +1,16 @@
 :root {
     --main-text-color: #606060;
+    min-width: 300px;
+    font-family: "Helvetica", Helvetica, Arial, sans-serif;
+    font-size: 1.2rem;
+
+    color: var(--main-text-color);
 }
 
 body {
-
-    font-family: "Helvetica", Helvetica, Arial, sans-serif;
-    font-size: 2rem;
-
     display: flex;
     flex-direction: column;
-    justify-content: center;
-
-    color: var(--main-text-color);
+    align-items: center;
 }
 
 header {
@@ -31,14 +30,6 @@ h3 {
     text-align: center;
 }
 
-.header-user-name {
-    margin: 1rem 0 1rem 0;
-}
-
-.header-user-name a {
-    font-size: 1.5rem;
-}
-
 nav a {
     font-size: 1rem;
 }
@@ -47,6 +38,15 @@ header nav{
     display: flex;
     flex-direction: column;
     justify-content: space-evenly;
+}
+
+.main-container {
+    width: 100%;
+    max-width: 800px;
+}
+
+.header-user-name {
+    margin: 1rem 0 1rem 0;
 }
 
 .errorlist {
@@ -79,35 +79,11 @@ form p :last-child {
     width: 8rem;
 }
 
-.form-item-button {
-    border-radius: 20%;
-    margin: 0 .5rem;
-    background-color: #ffff;
-    color: var(--main-text-color);
-}
-
-
-.list-container h3 {
-    text-align: left;
-    margin-left: 40px;
-}
-
-.list-container ul li {
-    display: flex;
-    flex-direction: row;
-}
-
-.list-container ul li form{
-    margin: 0 0 0 1rem;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-}
-
 .button {
-    font-size: 2rem;
+    font-size: 1.5rem;
     background-color: var(--main-text-color);
     color: #ffff;
     border-radius: 10%;
     margin: 1rem 1.5rem;
+    padding: .5rem 1rem;
 }

@@ -1,3 +1,4 @@
+from django.contrib.auth.views import LoginView
 from django.views.decorators.csrf import csrf_protect
 from django.contrib.auth import authenticate
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -10,7 +11,7 @@ from django.shortcuts import redirect, render
 from collections import OrderedDict
 
 from .helpers import get_json_from_api, initialize_groups
-from .view_helpers import user_page_view, create_appointment_view
+from .view_helpers import user_page_view, create_appointment_view, appointment_detail_view
 from .models import CustomUser
 
 
@@ -25,6 +26,7 @@ class UserPageView(LoginRequiredMixin, View):
     context = {
         'user_name': '', 
         'appointments': OrderedDict(),
+        'last_appointment_id': None,
         'error_message': ''
     }
 
@@ -34,17 +36,20 @@ class UserPageView(LoginRequiredMixin, View):
 
     def post(self, request):
         self, request = user_page_view.post_request(self, request)
+        # if redirect_url != '':
+        #     redirect(redirect_url)
         return render(request, self.template_name, self.context)
 
 
 class CreateAppointmentView(LoginRequiredMixin, View):
     template_name = 'app/make-appointment.html'
     login_url = '/login/'
-
-    context = {
+    context = {    
         'form': None,
         'user_is_customer': True,
-        'appointment_start_time': '',
+        'page_header': 'Make an Appointment',
+        'submit_button_text': 'Schedule',
+        'submit_method_type': 'post',
         'error_message': ''
     }
 
@@ -53,7 +58,39 @@ class CreateAppointmentView(LoginRequiredMixin, View):
         return render(request, self.template_name, self.context)
 
     def post(self, request):
-        self, request, redirect_page = create_appointment_view.post_request(self, request)
+        self, request, redirect_page = create_appointment_view.post_or_put_request(self, request)
+        if redirect_page != '':
+            return redirect(redirect_page)
+        return render(request, self.template_name, self.context)
+
+
+class AppointmentDetailView(LoginRequiredMixin, View):
+    """
+    This class uses the same html template as CreateAppointmentView(),
+    so the same context properties are needed, except appointment_id is added here.
+    """
+    template_name = 'app/make-appointment.html'
+    login_url = '/login/'
+    context = {    
+        'form': None,
+        'user_is_customer': True,
+        'appointment_id': -1,
+        'page_header': 'Change Appointment',
+        'submit_button_text': 'Change',
+        'submit_method_type': 'put',
+        'error_message': ''
+    }
+
+    def get(self, request, pk):
+        self, request = appointment_detail_view.get_request(self, request, pk)
+        return render(request, self.template_name, self.context)
+
+    def post(self, request, pk):
+        """
+        This post is actually a put that uses the same method 
+        as CreateAppointmentView post, but with a 'PUT' flag
+        """
+        self, request, redirect_page = create_appointment_view.post_or_put_request(self, request, pk)
         if redirect_page != '':
             return redirect(redirect_page)
         return render(request, self.template_name, self.context)
@@ -137,3 +174,4 @@ def modify_user(request):
         form = CustomUserChangeForm()
 
     return render(request, 'app/modify-user.html', {'form': form})
+

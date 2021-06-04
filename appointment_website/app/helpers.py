@@ -12,12 +12,16 @@ API_MAIN_ROUTE = 'http://127.0.0.1:8080/'
 
 APPOINTMENT_LENGTH_MINTUES = 30
 
+MAIN_DATE_FORMAT = 'm/d/Y'
+MAIN_TIME_FORMAT = 'h:i a'
+
 
 def get_json_from_api(url_endpoint: str) -> dict[str, object]:
     response = {}
     try:
         if len(url_endpoint) > 0:
             request_url = _create_request_url(url_endpoint)
+            # print('\nAPI GET REQUEST', request_url,'\n')
             response = requests.get(request_url, headers={'Authorization': f'token {API_TOKEN}'})
     except Exception as e:
         raise e
@@ -32,7 +36,32 @@ def get_json_from_api(url_endpoint: str) -> dict[str, object]:
     return output
 
 
-def post_json_to_api(url_endpoint: str, json_object: object) -> dict[str, object]:
+def post_or_put_json_to_api(post_or_put: str, url_endpoint: str, json_object: object) -> dict[str, object]:
+    post_or_put = post_or_put.upper()
+    assert post_or_put in ['POST', 'PUT']
+    response = {}
+    try:
+        if len(url_endpoint) > 0:
+            request_url = _create_request_url(url_endpoint)
+            print('\nPOST OR PUT REQUEST', request_url,'\n')
+            if post_or_put == 'POST':
+                response = requests.post(request_url, data=json_object, headers={'Authorization': f'token {API_TOKEN}'})
+            else:
+                response = requests.put(request_url, data=json_object, headers={'Authorization': f'token {API_TOKEN}'})
+    except Exception as e:
+        raise e
+
+    if response == {}:
+        output = {'status': 404, 'content': {}}
+    else:    
+        response_code = response.status_code
+        response_content = response.content.decode('utf-8')  # first convert the data from bytes to text
+        response_content = json.loads(response_content)  # then convert the text to json
+        output = {'status': response_code, 'content': response_content}
+    return output
+
+
+def put_json_to_api(url_endpoint: str, json_object: object) -> dict[str, object]:
     response = {}
     try:
         if len(url_endpoint) > 0:
@@ -51,7 +80,7 @@ def post_json_to_api(url_endpoint: str, json_object: object) -> dict[str, object
     return output
 
 
-def send_api_delete(url_endpoint: str):
+def delete_api_object(url_endpoint: str):
     response = {}
     try:
         request_url = _create_request_url(url_endpoint)
@@ -76,7 +105,8 @@ def format_phone_number(phone_number: str) -> str:
 
 
 def _create_request_url(endpoint: str) -> str:
-    endpoint = endpoint + '/' if endpoint[-1] != '/' else endpoint
+    endpoint = endpoint + '/' if endpoint[-1] != '/' else endpoint # must have a trailing '/'
+    endpoint = endpoint[1:] if endpoint[0] == '/' else endpoint # can't have a leading '/'
     return f'{API_MAIN_ROUTE}{endpoint}'
 
 
@@ -104,7 +134,7 @@ def get_appointment_times():
     output = []
     _time = start_time
     while _time <= end_time:
-        output.append((_time, time_format(_time, 'h:i a')))
+        output.append((_time.time(), time_format(_time, MAIN_TIME_FORMAT)))
         _time += timezone.timedelta(minutes=APPOINTMENT_LENGTH_MINTUES)
     # return a tuple used by forms.Select (drop-down) in a format of (key, value)
     return output

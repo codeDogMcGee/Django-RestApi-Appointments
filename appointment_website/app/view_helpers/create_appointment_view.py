@@ -2,7 +2,7 @@ from django.utils import timezone
 from django.shortcuts import redirect
 
 from ..forms import EmployeeAppointmentForm, CustomerAppointmentForm
-from ..helpers import APPOINTMENT_LENGTH_MINTUES, get_groups_for_user, post_json_to_api
+from ..helpers import APPOINTMENT_LENGTH_MINTUES, get_groups_for_user, post_or_put_json_to_api
 
 def get_request(class_instance, request):
     user_groups = get_groups_for_user(request.user) 
@@ -19,7 +19,7 @@ def get_request(class_instance, request):
 
     return class_instance, request
 
-def post_request(class_instance, request):
+def post_or_put_request(class_instance, request, put_request_id=None):
     redirect_page = ''
     try:
         form = None
@@ -51,12 +51,18 @@ def post_request(class_instance, request):
                 'customer_id': customer.id
             }
 
-            # post the new appointment to the api db
-            response_object = post_json_to_api('appointments', appointment_object)
+            response_object = {}
+            if put_request_id:
+                appointment_object['id'] = put_request_id
+                response_object = post_or_put_json_to_api('PUT', f'appointment/{put_request_id}/', appointment_object)
+            else:
+                # post the new appointment to the api db
+                response_object = post_or_put_json_to_api('POST', 'appointments', appointment_object)
 
-            if response_object['status'] == 201:  
+            if response_object['status'] == 201 or response_object['status'] == 200:  
                 # return redirect('user-page') 
                 redirect_page = 'user-page'   
+            
             else:
                 print('\n\nERROR CREATING APPOINTMENT:\n', f'status={response_object["status"]}, message={response_object["content"]}')
                 
@@ -65,6 +71,7 @@ def post_request(class_instance, request):
 
         else:
             print(f'\n\nFORM NOT VALID\n{form.errors}\n\n')
+            class_instance.context['error_message'] = f'Invalid form: {form.errors.as_text}'
 
     except Exception as e:
         print(f'ERROR MAKING APPOINTMENT: {e}')
