@@ -1,10 +1,14 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import Appointment, PastAppointment, HelperModel
 
+from .models import Appointment, PastAppointment, HelperModel
+from .validators import prevent_double_book
 
 class AppointmentSerializer(serializers.ModelSerializer):
     
+    def validate(self, appointment):
+        return prevent_double_book(appointment)
+
     class Meta:
         model = Appointment
         fields = '__all__'
