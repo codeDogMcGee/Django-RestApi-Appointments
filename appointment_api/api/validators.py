@@ -46,6 +46,11 @@ def prevent_double_book(appointment):
         elif (employee_is_same or customer_is_same) and  appointment_start_time_tz < existing_appointment.end_time and appointment_end_time_tz > existing_appointment.end_time:
             error = True
 
+        # check if inside of other existing appointment
+        elif (employee_is_same or customer_is_same) and  appointment_start_time_tz >= existing_appointment.start_time and appointment_end_time_tz <= existing_appointment.end_time:
+            error = True
+
+
         if error:
             appointment_string = f'[ {appointment_start_time_tz} - {appointment_end_time_tz} ]'
             existing_appointment_string = f'[ {existing_appointment.start_time} - {existing_appointment.end_time} ]'
