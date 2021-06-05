@@ -8,20 +8,42 @@
     <div class="form-container">
         <h3>{{ page_header }}</h3>
 
-        {% comment %} 
-        Provide two form types, one for creating a new appointment (POST),
-        and one for changing an existing appointment (PUT).
-        {% endcomment %}
-        {% if submit_method_type == 'post' %}
+        {% if search_customer_form %}
             <form action={% url 'make-appointment' %} method='post' autocomplete="off">
-        {% else %}
-            <form action={% url 'appointment-detail' appointment_id %} method='post' autocomplete="off">
+            {% csrf_token %}
+                {{ search_customer_form.as_p}}
+                <input type="submit" value="Search" class="button">
+            </form>
+
+            {% if search_text != '' %}
+                {% if appointment_form.n_query_results == 1 %}
+                    <p class="search-stats">Search for '{{ search_text }}' has 1 result.</p>
+                {% else %}
+                    <p class="search-stats">Search for '{{ search_text }}' has {{ appointment_form.n_query_results }} results.</p>
+                {% endif %}
+            {% endif %}
+            
         {% endif %}
 
-        {% csrf_token %}
-            {{ form.as_p}}
-            <input type="submit" value={{ submit_button_text }} class="button">
-        </form>
+        {% comment %} 
+            Provide two form types, one for creating a new appointment (POST),
+            and one for changing an existing appointment (PUT). Note the Django forms have to use post in the template.
+        {% endcomment %}
+        {% if appointment_form %}
+
+            {% if submit_method_type == 'post' %}
+                <form action={% url 'make-appointment' %} method='post' autocomplete="off" name="appointment_form">
+            {% else %}
+                <form action={% url 'appointment-detail' appointment_id %} method='post' autocomplete="off">
+            {% endif %}
+
+            {% csrf_token %}
+                {{ appointment_form.as_p}}
+                <input type="submit" value={{ submit_button_text }} class="button">
+            </form>
+
+        {% endif %}
+        
     </div>
     
 

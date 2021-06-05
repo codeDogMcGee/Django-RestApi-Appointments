@@ -3,7 +3,8 @@ from django.utils.formats import date_format
 
 from app.models import CustomUser
 from app.forms import EmployeeAppointmentForm, CustomerAppointmentForm
-from app.helpers import get_json_from_api, get_groups_for_user, MAIN_DATE_FORMAT
+from app.helpers.helpers import get_json_from_api, MAIN_DATE_FORMAT
+from app.helpers.user_helpers import get_groups_for_user
 
 
 def get_request(class_instance, request, pk):

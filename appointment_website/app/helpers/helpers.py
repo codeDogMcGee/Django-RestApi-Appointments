@@ -4,10 +4,9 @@ from django.utils.formats import time_format
 import requests
 import json
 
-from . import api_auth
-from .models import CustomUser
+import app.api_auth
 
-API_TOKEN = api_auth.get_api_token()
+API_TOKEN = app.api_auth.get_api_token()
 API_MAIN_ROUTE = 'http://127.0.0.1:8080/'
 
 APPOINTMENT_LENGTH_MINTUES = 30
@@ -15,6 +14,9 @@ APPOINTMENT_LENGTH_MINTUES = 30
 MAIN_DATE_FORMAT = 'm/d/Y'
 MAIN_TIME_FORMAT = 'h:i a'
 
+USER_GROUPS = {'employees': 'Emplyoees', 'customers':'Customers'}
+
+VALID_DATE_INPUT_FORMATS = ['%m/%d/%Y', '%m-%d-%Y', '%Y-%m-%d']
 
 def get_json_from_api(url_endpoint: str) -> dict[str, object]:
     response = {}
@@ -110,17 +112,8 @@ def _create_request_url(endpoint: str) -> str:
     return f'{API_MAIN_ROUTE}{endpoint}'
 
 
-def get_groups_for_user(user: CustomUser) -> list[str]:
-    groups = []
-    if user in CustomUser.objects.filter(group__name='Customers'): # if user in Customers group
-        groups.append('Customers')
-    elif user in CustomUser.objects.filter(group__name='Employees'): # if user in Employees group
-        groups.append('Employees')
-    return groups
-
-
 def initialize_groups() -> dict[str, (object, bool)]: 
-    groups = ['Employees', 'Customers']
+    groups = ['Employees', 'Customers', 'Managers']
     output = {}
     for group_name in groups:
         output[group_name] = Group.objects.get_or_create(name=group_name) # return tuple (group_object, created_bool)

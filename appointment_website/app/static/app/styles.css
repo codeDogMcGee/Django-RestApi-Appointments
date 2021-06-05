@@ -54,6 +54,10 @@ header nav{
     font-size: 1rem;
 }
 
+.error-msg {
+    color: red;
+}
+
 .form-container {
     display: flex;
     flex-direction: column;
@@ -85,5 +89,5 @@ form p :last-child {
     color: #ffff;
     border-radius: 10%;
     margin: 1rem 1.5rem;
-    padding: .5rem 1rem;
+    padding: 0 1rem;
 }

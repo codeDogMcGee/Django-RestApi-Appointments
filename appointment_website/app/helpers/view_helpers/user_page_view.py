@@ -3,8 +3,9 @@ from django.shortcuts import redirect
 from django.utils import dateparse
 from django.utils.formats import date_format, time_format
 
-from ..helpers import get_json_from_api, delete_api_object, get_groups_for_user
-from ..models import CustomUser
+from app.helpers.helpers import get_json_from_api, delete_api_object
+from app.helpers.user_helpers import get_groups_for_user
+from app.models import CustomUser
 
 def post_request(class_instance, request):
     request_post_query_dict = request.POST
@@ -46,7 +47,10 @@ def get_request(class_instance, request):
         if api_response['status'] == 200:
             appointments_list = api_response['content']
 
-            class_instance.context['last_appointment_id'] = appointments_list[-1]['id']
+            if len(appointments_list) > 0:
+                class_instance.context['last_appointment_id'] = appointments_list[-1]['id']
+            else:
+                class_instance.context['last_appointment_id'] = None
 
             for appointment in appointments_list:
                 # format appointment start data and time

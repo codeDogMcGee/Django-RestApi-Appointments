@@ -1,27 +1,27 @@
 from django.contrib.auth.base_user import BaseUserManager
-from django.contrib.auth.models import Group
 from django.utils.translation import ugettext_lazy as _
 
 
 class CustomUserManager(BaseUserManager):
     """
-    CustomUser uses the email as unique 
+    CustomUser uses the phone as unique 
     identifier rather than username.
     """
-    def create_user(self, phone, email, name, group, password, **extra_fields):
-        if not email:
-            raise ValueError(_('Email is required.'))
+    def create_user(self, phone, name, group, password, **extra_fields):
         if not phone:
             raise ValueError(_('Phone is required.'))
         if not name:
             raise ValueError(_('Name is required.'))
+        if not group:
+            raise ValueError(_('A user Group is required.'))
+        if not password:
+            raise ValueError(_('Password is required.'))
 
         phone = phone
-        email = self.normalize_email(email)
         name = name
         group = group
         
-        user = self.model(phone=phone, email=email, name=name, group=group, **extra_fields)
+        user = self.model(phone=phone, name=name, group=group, **extra_fields)
         user.set_password(password)
         user.save()
 

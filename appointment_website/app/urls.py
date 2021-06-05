@@ -1,7 +1,5 @@
 from django.urls import path
-from django.conf.urls import include, url
-from django.http import HttpResponseRedirect
-from django.conf import settings
+from django.conf.urls import include
 
 from . import views
 

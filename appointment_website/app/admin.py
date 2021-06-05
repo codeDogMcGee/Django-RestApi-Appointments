@@ -9,19 +9,25 @@ class CustomUserAdmin(UserAdmin):
     add_form = CustomUserCreationForm
     form = CustomUserChangeForm
     model = CustomUser
-    list_display = ('phone', 'email', 'name', 'group', 'is_staff', 'is_active',)
-    list_filter = ('phone', 'email', 'name', 'group', 'is_staff', 'is_active',)
+
+    # main view
+    list_display = ('phone', 'name', 'group', 'last_appointment_datetime', 'created', 'is_staff', 'is_active')
+    list_filter = ('phone', 'name', 'group', 'last_appointment_datetime', 'created', 'is_staff', 'is_active')
+
+    # user detail view
     fieldsets = (
-        (None, {'fields': ('phone', 'email', 'name', 'password')}),
+        (None, {'fields': ('phone', 'name', 'last_appointment_datetime')}),
         ('Permissions', {'fields': ('is_staff', 'is_active', 'group')}),
     )
+
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('phone', 'email', 'name', 'group','password1', 'password2', 'is_staff', 'is_active')
+            'fields': ('phone', 'name', 'group','password1', 'password2', 'is_staff', 'is_active')
         }),
     )
-    search_fields = ('phone', 'email', 'name', 'group',)
-    ordering = ('group', 'name',)
+    
+    search_fields = ('phone', 'name', 'group')
+    ordering = ('group', 'name', 'last_appointment_datetime', 'created')
 
 admin.site.register(CustomUser, CustomUserAdmin)

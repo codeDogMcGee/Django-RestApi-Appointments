@@ -10,8 +10,8 @@ from django.utils.formats import date_format, time_format
 from django.shortcuts import redirect, render
 from collections import OrderedDict
 
-from .helpers import get_json_from_api, initialize_groups
-from .view_helpers import user_page_view, create_appointment_view, appointment_detail_view
+from .helpers.helpers import get_json_from_api, initialize_groups
+from .helpers.view_helpers import user_page_view, create_appointment_view, appointment_detail_view
 from .models import CustomUser
 
 
@@ -45,7 +45,14 @@ class CreateAppointmentView(LoginRequiredMixin, View):
     template_name = 'app/make-appointment.html'
     login_url = '/login/'
     context = {    
-        'form': None,
+        'appointment_form': None,
+        'search_user_form': None,
+        'search_text': '',
+        # 'n_search_results': -1, 
+        # 'search_result_query_set': None,
+        # 'search_text': '',
+        # 'temp': '',
+
         'user_is_customer': True,
         'page_header': 'Make an Appointment',
         'submit_button_text': 'Schedule',
@@ -59,8 +66,8 @@ class CreateAppointmentView(LoginRequiredMixin, View):
 
     def post(self, request):
         self, request, redirect_page = create_appointment_view.post_or_put_request(self, request)
-        if redirect_page != '':
-            return redirect(redirect_page)
+        # if redirect_page != '':
+        #     return redirect(redirect_page)
         return render(request, self.template_name, self.context)
 
 
@@ -72,9 +79,12 @@ class AppointmentDetailView(LoginRequiredMixin, View):
     template_name = 'app/make-appointment.html'
     login_url = '/login/'
     context = {    
-        'form': None,
-        'user_is_customer': True,
+        'appointment_form': None,
+        'search_user_form': None,
+        'user_search_text': '',
+
         'appointment_id': -1,
+        'user_is_customer': True,
         'page_header': 'Change Appointment',
         'submit_button_text': 'Change',
         'submit_method_type': 'put',
@@ -146,7 +156,6 @@ def create_user(request):
 
             authenticate(
                 phone = form.cleaned_data['phone'], 
-                email = form.cleaned_data['email'], 
                 name = form.cleaned_data['name'], 
                 group = form.cleaned_data['group'],
                 password = form.cleaned_data['password1']
