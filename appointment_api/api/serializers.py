@@ -1,13 +1,13 @@
-from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from .models import Appointment, PastAppointment, HelperModel
-from .validators import prevent_double_book
+from .models import Appointment, PastAppointment, HelperSettingsModel, ApiUser
+from .validators import prevent_double_book, is_valid_password
+
 
 class AppointmentSerializer(serializers.ModelSerializer):
     
     def validate(self, appointment):
-        return prevent_double_book(appointment)
+        return prevent_double_book.validate(appointment)
 
     class Meta:
         model = Appointment
@@ -19,15 +19,24 @@ class PastAppointmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = PastAppointment
         fields = '__all__'
-    
 
-class UserSerializer(serializers.ModelSerializer):
+
+class HelperSettingsSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
-        fields = ['id', 'username', 'email', 'is_staff', 'is_superuser']
-
-
-class HelperSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = HelperModel
+        model = HelperSettingsModel
         fields = '__all__'
+
+
+class AppUserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ApiUser
+        fields = ['id', 'phone', 'name', 'groups']
+
+
+class AppCreateUserSerializer(serializers.ModelSerializer):
+    password_submitted = serializers.CharField(max_length=100, validators=[is_valid_password.validate])
+
+    class Meta:
+        model = ApiUser
+        fields = ['id', 'phone', 'name', 'password_submitted']

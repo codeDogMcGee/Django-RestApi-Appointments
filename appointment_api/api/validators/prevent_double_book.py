@@ -1,21 +1,10 @@
 from django.core.exceptions import ValidationError
 import pytz
-from django.utils.translation import gettext_lazy as _
 from django.conf import settings
-from .models import Appointment
+from ..models import Appointment
 
 
-def validate_is_int(value):
-    try:
-        int(value)
-    except:
-        raise ValidationError(
-            _('%(value)s is not a number'),
-            params={'value': value},
-        )
-
-
-def prevent_double_book(appointment):
+def validate(appointment):
 
     server_timezone = pytz.timezone(settings.TIME_ZONE)
 
@@ -54,11 +43,7 @@ def prevent_double_book(appointment):
         if error:
             appointment_string = f'[ {appointment_start_time_tz} - {appointment_end_time_tz} ]'
             existing_appointment_string = f'[ {existing_appointment.start_time} - {existing_appointment.end_time} ]'
-            raise ValidationError( _('Appointment %(appointment)s overlapps with the existing appointment %(existing_appointment)s'), 
+            raise ValidationError( 'Appointment %(appointment)s overlapps with the existing appointment %(existing_appointment)s', 
                                   params={'appointment': appointment_string, 'existing_appointment': existing_appointment_string})
 
     return appointment
-
-
-
-    

@@ -1,0 +1,42 @@
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'api/styles.css' %}">
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appointments</title>
+
+    <link rel="shortcut icon" type="image/png" href="{% static 'images/SunMountains.png' %}">
+
+</head>
+<body>
+    <div class="main-container">
+        <header>
+            <a href="/"><h2>Logo</h2></a>
+            <nav>
+                {% if request.user.is_authenticated %}
+                    <p class="header-user-name"><a href="/user-page/">Welcome, {{ request.user.name }}!</a></p>
+                    <a href="/logout/?next=/">Logout</a>
+                {% else %}
+                    {% comment %} 
+                        TEMPLATE_CONTEXT_PROCESSORS in settings allows request.path
+                        to reference the path the request came from so the user
+                        can be redirected back after logging in.
+                    {% endcomment %}
+                    <a href="/admin/login/?next=/admin/">Login</a>
+                {% endif %}
+                
+                {% if request.user.is_staff %}
+                    <a href="/admin/">Admin</a>
+                {% endif %}
+            </nav>
+        </header>
+
+            {% block content %}{% endblock %}
+            
+    </div>
+</body>
+</html>
