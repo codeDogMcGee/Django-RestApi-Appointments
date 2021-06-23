@@ -1,58 +1,71 @@
-# Appointments-Django
+# Django-REST API-Appointments
 
-## Python Version 3.9.5
-
-### REST API using Django Rest Framework. 
+## REST API using Django Rest Framework. 
 This project will be used as the boilerplate for a custom appointments web app for a nail salon in Denver, Colorado.
 
-The appointment_api and appointment_website are seperate apps but share a python environment in the top level of the project. To create
-a python environment, navigate to top directory in the project:
+### __Endpoints__
+Admin Only Endpoints:
+```
+settings/
+users/
+users/<str:group_name>/   # POST here to create a user
+```
+
+Authenticated users can only GET, PUT, and DELETE their own profile:
+```
+user/<int:pk>/
+```
+
+Appointments endpoints, accessable by authenticated users:
+```
+appointments/
+appointments/<int:pk>/
+past-appointments/
+past-appointments/<int:pk>/
+```
+
+
+### __Create a Django environment__
 ```
 python -m venv venv
-```
-Then to activate the environment in Windows CMD:
-```
 venv\venv\activate.bat
+(venv) pip install -r requirements.txt
 ```
-or on Linux or Mac:
+To activate the Python on Linux:
 ```
-venv/venv/activate
+source venv/venv/activate
 ```
-
-
-To start the api:
+### __Build the Project__
 ```
-cd appointment_api
-python manage.py migrate
 python manage.py makemigrations api
+python manage.py migrate
 python manage.py createsuperuser
+```
+
+### __Run the server__
+```
 python manage.py runserver 8080
 ```
 
+### __Authentication__
 Token authentication is used, so users must have a token to be able to access the api. Tokens can be generated via command-line:
 ```
 python manage.py drf_create_token username
 ```
-
-There are 3 types of users:
-1. admin
-    - has permissions for everything
-2. manager
-    - can add new Users (managers) with is_staff=True access
-    - can add new Employees, Customers, and Appointments 
-    - otherwise same access as api_user but can see more detail for employees and customers
-3. api_user
-    - can add Customers and Appointments
-
-### Django Website Front-End
-Django website that connects to the appointments API and lets users view and make appointments.
-To start the website:
+A registered user can also request a token via the __api-token-auth/__ endpoint buy submitting a POST request like:
 ```
-cd appointment_website
-python manage.py makemigrations app
-python manage.py migrate
-python manage.py runserver 8000
+{
+    "username": "username",
+    "password": "password"
+}
 ```
-Once up and running you can create some users and make appointments:
+
+### __Groups__
+For authentication purposes there are 3 user groups: __Customers__, __Employees__, and __Management__. When creating users with the _users/group_name/_ endpoint that user is automatically
+added the group.
+
+
+### __Django Website Front-End__
+Django website that connects to the appointments API and lets users view and make appointments (This is being replaced with a React front-end). 
 ![Make appointment](images/make_appointment.PNG)
 ![View appointments](images/user_appointments.PNG)
