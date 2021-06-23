@@ -3,7 +3,7 @@ from django.utils import timezone
 
 from api.models import Appointment, PastAppointment, HelperSettingsModel
 from api.serializers import HelperSettingsSerializer, PastAppointmentSerializer
-from api.utils.utils import DELETE_OLD_APPOINTEMENTS_EVERY_N_DAYS, MAX_APPOINTMENT_AGE_DAYS
+from api.utils.static_vars import DELETE_OLD_APPOINTEMENTS_EVERY_N_DAYS, MAX_APPOINTMENT_AGE_DAYS
 
 
 def _move_completed_appointments_to_past_appointments():
@@ -41,7 +41,7 @@ def _instatiate_helper_model():
     if helpers_serializer.is_valid():
         helpers_serializer.save()
     else:
-        print(f'\nERROR INSTATIATING HELPER MODEL: {helpers_serializer.errors}\n')
+        raise Exception(f'\nERROR INSTATIATING HELPER MODEL: {helpers_serializer.errors}\n')
 
 
 def _create_helper_object_if_not_exits():

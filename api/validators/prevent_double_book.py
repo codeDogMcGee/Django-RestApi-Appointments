@@ -23,8 +23,8 @@ def validate(appointment):
         existing_appointment.start_time = existing_appointment.start_time.astimezone(server_timezone).time()
         existing_appointment.end_time = existing_appointment.end_time.astimezone(server_timezone).time()
 
-        employee_is_same = appointment['employee_id'] == existing_appointment.employee_id
-        customer_is_same = appointment['customer_id'] == existing_appointment.customer_id
+        employee_is_same = appointment['employee'] == existing_appointment.employee
+        customer_is_same = appointment['customer'] == existing_appointment.customer
 
         # check for overlap at the front, and either the customer or employee matches
         error = False

@@ -6,6 +6,7 @@ from api import views
 urlpatterns = [
     path('', views.IndexView.as_view(), name='index'),
     path('settings/', views.HelperSettingsView.as_view(), name='helper-settings'),
+    path('groups/', views.GroupIdsView.as_view(), name='groups'),
 
     path('users/', views.UsersView.as_view(), name='users'),
     path('users/<str:group_name>/', views.UsersView.as_view(), name='users-groups'),

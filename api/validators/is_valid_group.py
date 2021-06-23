@@ -1,7 +1,6 @@
 from django.core.exceptions import ValidationError
 
-from api.utils.utils import GROUPS
-from api.models import ApiUser
+from api.utils.static_vars import GROUPS
 
 def validate(group_name):
     group_name = group_name.lower()

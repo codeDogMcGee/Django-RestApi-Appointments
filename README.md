@@ -35,7 +35,7 @@ To activate the Python on Linux:
 ```
 source venv/venv/activate
 ```
-### __Build the Project__
+### __Build the project__
 ```
 python manage.py makemigrations api
 python manage.py migrate

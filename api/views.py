@@ -8,9 +8,9 @@ from rest_framework import permissions
 from rest_framework import status
 from rest_framework.views import APIView
 
-from api.models import Appointment, PastAppointment, HelperSettingsModel, ApiUser
-from api.serializers import AppointmentSerializer, HelperSettingsSerializer, AppUserSerializer, AppCreateUserSerializer, PastAppointmentSerializer
-from api.utils.utils import get_or_create_groups
+from api.models import Appointment, GroupIdsModel, PastAppointment, HelperSettingsModel, ApiUser
+from api.serializers import AppointmentSerializer, GroupIdsSerializer, HelperSettingsSerializer, AppUserSerializer, AppCreateUserSerializer, PastAppointmentSerializer
+from api.utils.get_or_create_groups import get_or_create_groups
 from api.utils.manage_appointments import execute_helper_functions
 from api.validators import is_valid_group
 
@@ -108,15 +108,6 @@ class PastAppointmentDetail(APIView):
 
         appointment = self._get_appointment(pk)
         serializer = PastAppointmentSerializer(appointment)
-        return Response(serializer.data)
-
-
-class HelperSettingsView(APIView):
-    permission_classes = [permissions.IsAdminUser]
-
-    def get(self, request):
-        helpers = HelperSettingsModel.objects.all()
-        serializer = HelperSettingsSerializer(helpers, many=True)
         return Response(serializer.data)
 
 
@@ -232,6 +223,25 @@ class UserDetailView(APIView):
 
         else:
             return Response({'Password not provided error': 'Must provide a password with a user update.'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class HelperSettingsView(APIView):
+    permission_classes = [permissions.IsAdminUser]
+
+    def get(self, request):
+        helpers = HelperSettingsModel.objects.all()
+        serializer = HelperSettingsSerializer(helpers, many=True)
+        return Response(serializer.data)
+
+
+class GroupIdsView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        groups = GroupIdsModel.objects.all()
+        serializer = GroupIdsSerializer(groups, many=True)
+        return Response(serializer.data)
+
 
 
 # class AppointmentsForEmployeeIdView(APIView):

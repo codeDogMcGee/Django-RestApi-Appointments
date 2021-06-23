@@ -1,16 +1,21 @@
-from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, Group
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.core.validators import MinLengthValidator
 from django.utils.translation import gettext_lazy as _
 from django.db import models
 from django.utils import timezone
 
-from .managers import CustomUserManager
-from .utils.utils import format_phone_number
-from .validators import is_int
+from api.managers import CustomUserManager
+from api.utils.format_phone_number import format_phone_number
+from api.validators import is_int
 
 
 class HelperSettingsModel(models.Model):
     last_appointment_cleanup_time = models.DateTimeField(default=timezone.datetime(2000, 1, 1, 0, 0, 0))
+
+
+class GroupIdsModel(models.Model):
+    group_id = models.IntegerField(null=True)
+    group_name = models.CharField(max_length=100, blank=False, null=False)
 
 
 class ApiUser(AbstractBaseUser, PermissionsMixin):
@@ -31,7 +36,7 @@ class ApiUser(AbstractBaseUser, PermissionsMixin):
     objects = CustomUserManager()
 
     def __str__(self):
-        return f'{self.name} | {format_phone_number(self.phone)}' #  | {self.groups}
+        return f'{self.name} | {format_phone_number(self.phone)}'
 
 
 class Appointment(models.Model):

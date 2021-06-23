@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
-from .models import Appointment, PastAppointment, HelperSettingsModel, ApiUser
-from .validators import prevent_double_book, is_valid_password
+from api.models import Appointment, GroupIdsModel, PastAppointment, HelperSettingsModel, ApiUser
+from api.validators import prevent_double_book, is_valid_password
 
 
 class AppointmentSerializer(serializers.ModelSerializer):
@@ -24,6 +24,12 @@ class PastAppointmentSerializer(serializers.ModelSerializer):
 class HelperSettingsSerializer(serializers.ModelSerializer):
     class Meta:
         model = HelperSettingsModel
+        fields = '__all__'
+
+
+class GroupIdsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GroupIdsModel
         fields = '__all__'
 
 
