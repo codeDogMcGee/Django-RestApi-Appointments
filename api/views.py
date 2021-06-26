@@ -2,14 +2,16 @@ from django.core.exceptions import ValidationError
 from django.http.response import Http404
 from django.shortcuts import render
 from django.views import View
+from django.contrib.auth import authenticate
 
 from rest_framework.response import Response
 from rest_framework import permissions
 from rest_framework import status
 from rest_framework.views import APIView
+from rest_framework.authtoken.views import ObtainAuthToken
 
 from api.models import Appointment, GroupIdsModel, PastAppointment, HelperSettingsModel, ApiUser
-from api.serializers import AppointmentSerializer, GroupIdsSerializer, HelperSettingsSerializer, AppUserSerializer, AppCreateUserSerializer, PastAppointmentSerializer
+from api.serializers import AppointmentSerializer, GroupIdsSerializer, HelperSettingsSerializer, AppUserSerializer, AppCreateUserSerializer, PastAppointmentSerializer, AuthTokenSerializer
 from api.utils.get_or_create_groups import get_or_create_groups
 from api.utils.manage_appointments import execute_helper_functions
 from api.validators import is_valid_group
@@ -41,6 +43,8 @@ class AppointmentList(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        print(request.data)
+        print(serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -112,7 +116,7 @@ class PastAppointmentDetail(APIView):
 
 
 class UsersView(APIView):
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, group_name=''):
 
@@ -157,7 +161,7 @@ class UsersView(APIView):
 
 
 class UserDetailView(APIView):
-    permission_classes = [permissions.AllowAny]  # permissions are handled in _get_user()
+    permission_classes = [permissions.IsAuthenticated]  # permissions are handled in _get_user()
 
     def _get_user(self, pk, active_user):
         '''
@@ -183,13 +187,13 @@ class UserDetailView(APIView):
             serializer = AppUserSerializer(user)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def delete(self, request, pk):
-        user, err = self._get_user(pk, request.user)
-        if err['error'] != '':
-            return Response(status=status.HTTP_403_FORBIDDEN)
-        else:    
-            user.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+    # def delete(self, request, pk):
+    #     user, err = self._get_user(pk, request.user)
+    #     if err['error'] != '':
+    #         return Response(status=status.HTTP_403_FORBIDDEN)
+    #     else:    
+    #         user.delete()
+    #         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def put(self, request, pk):
         '''
@@ -242,7 +246,16 @@ class GroupIdsView(APIView):
         serializer = GroupIdsSerializer(groups, many=True)
         return Response(serializer.data)
 
+        
+class CustomObtainAuthToken(ObtainAuthToken):
+    permission_classes = [permissions.AllowAny]
 
+    def post(self, request):
+        serializer = AuthTokenSerializer(data=request.data)
+        if serializer.is_valid():
+            return Response(serializer.validated_data)
+        else:
+            return Response(serializer.errors)
 
 # class AppointmentsForEmployeeIdView(APIView):
 #     """

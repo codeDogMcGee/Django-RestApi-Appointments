@@ -12,7 +12,7 @@ urlpatterns = [
     path('users/<str:group_name>/', views.UsersView.as_view(), name='users-groups'),
 
     path('user/<int:pk>/', views.UserDetailView.as_view(), name='user-detail'),
-
+    
     path('appointments/', views.AppointmentList.as_view(), name='appointment-list'),
     path('appointment/<int:pk>/', views.AppointmentDetail.as_view(), name='appointment-detail'),
     
@@ -22,6 +22,7 @@ urlpatterns = [
 
 # include auth views
 urlpatterns += [
-    path('api-token-auth/', obtain_auth_token, name='api_token_auth'), # provides post endpoint to receive api tokens
+    path('api-token-auth/', views.CustomObtainAuthToken.as_view(), name='api_token_auth'),
+    # path('api-token-auth/', obtain_auth_token, name='api_token_auth'), # provides a default post endpoint to receive api tokens
     # path('', include('django.contrib.auth.urls')),  # provides registration urls
 ]

@@ -1,7 +1,12 @@
+from django.core.validators import MinLengthValidator
+from django.contrib.auth import authenticate
+
 from rest_framework import serializers
+from rest_framework.authtoken.models import Token
+from rest_framework import exceptions
 
 from api.models import Appointment, GroupIdsModel, PastAppointment, HelperSettingsModel, ApiUser
-from api.validators import prevent_double_book, is_valid_password
+from api.validators import prevent_double_book, is_valid_password, is_int
 
 
 class AppointmentSerializer(serializers.ModelSerializer):
@@ -46,3 +51,24 @@ class AppCreateUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = ApiUser
         fields = ['id', 'phone', 'name', 'password_submitted']
+
+
+class AuthTokenSerializer(serializers.Serializer):
+    phone = serializers.CharField(required=True, max_length=10, validators=[is_int.validate, MinLengthValidator(10)])
+    password = serializers.CharField(required=True, max_length=100)
+
+    def validate(self, data):
+        phone = data.get('phone', None)
+        password = data.get('password', None)
+
+        user = authenticate(username=phone, password=password)
+
+        if user is None:
+            raise exceptions.AuthenticationFailed('Incorrect phone number and/or password.')
+        else:
+            token, _ = Token.objects.get_or_create(user=user)
+            return {
+                'token': token.key,
+                'user_id': user.pk,
+                'user_phone': user.phone
+            }

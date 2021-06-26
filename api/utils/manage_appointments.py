@@ -12,10 +12,11 @@ def _move_completed_appointments_to_past_appointments():
         if timezone.now() > appointment.end_time:
 
             past_appointment_object = {
+                'appointment_id': appointment.id,
                 'start_time' : appointment.start_time, 
                 'end_time' : appointment.end_time, 
-                'customer_id' : appointment.customer_id,
-                'employee_id' : appointment.employee_id,
+                'customer' : appointment.customer_id,
+                'employee' : appointment.employee_id,
                 'created' : appointment.created
             }
 

@@ -24,6 +24,10 @@ past-appointments/
 past-appointments/<int:pk>/
 ```
 
+Other:
+```
+groups/
+```
 
 ### __Create a Django environment__
 ```
