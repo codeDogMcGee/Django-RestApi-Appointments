@@ -2,6 +2,7 @@ from django.contrib.auth.models import Group
 
 from api.utils.static_vars import GROUPS
 from api.utils.create_group_id_object import create_group_id_object
+from api.models import ApiUser
 
 
 def get_or_create_groups() -> dict[int, object]:
@@ -14,5 +15,11 @@ def get_or_create_groups() -> dict[int, object]:
         # if the group is new add it to the GroupIdsModel
         if created:
             create_group_id_object(group)
+
+            if group.name == 'Admins':
+                superusers = ApiUser.objects.filter(is_superuser=True)
+                for su in superusers:
+                    group.user_set.add(su)
+
 
     return output

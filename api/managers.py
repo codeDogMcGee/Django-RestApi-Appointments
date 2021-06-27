@@ -7,21 +7,18 @@ class CustomUserManager(BaseUserManager):
     CustomUser uses the phone as unique 
     identifier rather than username.
     """
-    def create_user(self, phone, name, password, **extra_fields): # group,
+    def create_user(self, phone, name, password, **extra_fields):
         if not phone:
             raise ValueError(_('Phone is required.'))
         if not name:
             raise ValueError(_('Name is required.'))
-        # if not group:
-        #     raise ValueError(_('A user Group is required.'))
         if not password:
             raise ValueError(_('Password is required.'))
 
         phone = phone
         name = name
-        # group = group
         
-        user = self.model(phone=phone, name=name,  **extra_fields) # group=group,
+        user = self.model(phone=phone, name=name,  **extra_fields)
         user.set_password(password)
         user.save()
 

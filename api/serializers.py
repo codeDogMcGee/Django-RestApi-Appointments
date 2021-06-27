@@ -42,7 +42,13 @@ class AppUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ApiUser
-        fields = ['id', 'phone', 'name', 'groups']
+        fields = ['id', 'phone', 'name']
+
+class AppUserNoPhoneSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ApiUser
+        fields = ['id', 'name']
 
 
 class AppCreateUserSerializer(serializers.ModelSerializer):
@@ -63,12 +69,16 @@ class AuthTokenSerializer(serializers.Serializer):
 
         user = authenticate(username=phone, password=password)
 
+        full_user = ApiUser.objects.get(pk=user.pk)
+        groups = full_user.groups.all()
+        assert len(groups) == 1, 'Each user should only be in one group.'
+        group_name = groups[0].name
+
         if user is None:
             raise exceptions.AuthenticationFailed('Incorrect phone number and/or password.')
         else:
             token, _ = Token.objects.get_or_create(user=user)
             return {
                 'token': token.key,
-                'user_id': user.pk,
-                'user_phone': user.phone
+                'user_group': group_name
             }

@@ -3,15 +3,17 @@ from django.http.response import Http404
 from django.shortcuts import render
 from django.views import View
 from django.contrib.auth import authenticate
+from django.db.models import Q
 
 from rest_framework.response import Response
 from rest_framework import permissions
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.authtoken.views import ObtainAuthToken
+from api import serializers
 
 from api.models import Appointment, GroupIdsModel, PastAppointment, HelperSettingsModel, ApiUser
-from api.serializers import AppointmentSerializer, GroupIdsSerializer, HelperSettingsSerializer, AppUserSerializer, AppCreateUserSerializer, PastAppointmentSerializer, AuthTokenSerializer
+from api.serializers import AppointmentSerializer, GroupIdsSerializer, HelperSettingsSerializer, AppUserSerializer, AppUserNoPhoneSerializer, AppCreateUserSerializer, PastAppointmentSerializer, AuthTokenSerializer
 from api.utils.get_or_create_groups import get_or_create_groups
 from api.utils.manage_appointments import execute_helper_functions
 from api.validators import is_valid_group
@@ -33,10 +35,12 @@ class AppointmentList(APIView):
 
     def get(self, request):
         execute_helper_functions()
-
-        appointments = Appointment.objects.all()
-        serializer = AppointmentSerializer(appointments, many=True)
-        return Response(serializer.data)
+        if request.user.is_staff: # permissions.IsAdminUser
+            appointments = Appointment.objects.all()
+            serializer = AppointmentSerializer(appointments, many=True)
+            return Response(serializer.data)
+        else:
+            return Response({'error': 'Must be admin user to view all appointments'})
 
     def post(self, request):
         serializer = AppointmentSerializer(data=request.data)
@@ -51,6 +55,8 @@ class AppointmentList(APIView):
 class AppointmentDetail(APIView):
     """
     Read, Update, Delete functionality for one Appointment
+
+    Customers and Employees should only be able to see their own appointments
     """
     permission_classes = [permissions.IsAuthenticated]
 
@@ -85,7 +91,7 @@ class PastAppointmentList(APIView):
     """
     Read all appointments
     """
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAdminUser]
 
     def get(self, request):
         execute_helper_functions()
@@ -99,7 +105,7 @@ class PastAppointmentDetail(APIView):
     """
     Read only functionality for one Appointment
     """
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAdminUser]
 
     def _get_appointment(self, pk):
         try:
@@ -120,44 +126,79 @@ class UsersView(APIView):
 
     def get(self, request, group_name=''):
 
-        if group_name != '':
+        if len(group_name) > 0:
+                
             try:
-                users = ApiUser.objects.filter(groups__name=is_valid_group.validate(group_name))
-            except ValidationError:
-                return Response({'Invalid Group Error': f"[{group_name}] is not a valid group."}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            users = ApiUser.objects.all()
+                is_valid_group.validate(group_name)
+            except ValidationError:#is_valid_group.validate(group_name)
+                return Response({'error': f"[{group_name}] is not a valid group."})
 
-        serializer = AppUserSerializer(users, many=True)
+            group_name = group_name.lower()
+            group_name = group_name[0].upper() + group_name[1:]
+
+            request_user_groups = []
+            request_groups_query_set = request.user.groups.all()
+            for group in request_groups_query_set:
+                request_user_groups.append(group.name)
+
+            users = None
+            if (group_name == 'Customers' and 'Customers' in request_user_groups) or \
+                (group_name == 'Employees' and 'Employees' in request_user_groups):
+                # if it's a customer requesting customers only give them themselves
+                users = [{'id': request.user.id, 'name': request.user.name, 'phone': request.user.phone}]
+                serializer = AppUserSerializer(users, many=True)
+
+            elif (group_name == 'Customers' and 'Employees' in request_user_groups) or (request.user.is_staff):
+                # if an employee is requesting customers return them all active customers
+                users = ApiUser.objects.filter(is_active=True).filter(groups__name=group_name)
+                serializer = AppUserSerializer(users, many=True)
+
+            elif group_name == 'Employees' and 'Customers' in request_user_groups:
+                # if a customer is requesting employees don't include the phone numbers
+                users = ApiUser.objects.filter(is_active=True).filter(groups__name=group_name)
+                serializer = AppUserNoPhoneSerializer(users, many=True)
+
+        elif request.user.is_staff:
+            # admins can view all users
+            users = ApiUser.filter(is_active=True)
+            serializer = AppUserSerializer(users, many=True)
+    
+        else:
+            return Response('Unauthorized to view this page.')
+
         return Response(serializer.data)
+    
 
     def post(self, request, group_name=''):
         
-        if group_name != '':
-            groups_dict = get_or_create_groups()
+        if request.user.is_staff: #permissions.IsAdminUser
+            if group_name != '':
+                groups_dict = get_or_create_groups()
 
-            serializer = AppCreateUserSerializer(data=request.data)
-            if serializer.is_valid():
+                serializer = AppCreateUserSerializer(data=request.data)
+                if serializer.is_valid():
 
-                try:
-                    group_name = is_valid_group.validate(group_name)
-                except ValidationError:
-                    return Response({'Invalid Group Error': f"[{group_name}] is not a valid group."}, status=status.HTTP_400_BAD_REQUEST)
+                    try:
+                        group_name = is_valid_group.validate(group_name)
+                    except ValidationError:
+                        return Response({'Invalid Group Error': f"[{group_name}] is not a valid group."}, status=status.HTTP_400_BAD_REQUEST)
 
-                new_user = ApiUser.objects.create_user(
-                    phone = serializer.data['phone'], 
-                    name = serializer.data['name'], 
-                    password = serializer.data['password_submitted']
-                )
+                    new_user = ApiUser.objects.create_user(
+                        phone = serializer.data['phone'], 
+                        name = serializer.data['name'], 
+                        password = serializer.data['password_submitted']
+                    )
 
-                customer_group = groups_dict[group_name]
-                customer_group.user_set.add(new_user)
+                    customer_group = groups_dict[group_name]
+                    customer_group.user_set.add(new_user)
 
-                return Response(request.data, status=status.HTTP_201_CREATED)
+                    return Response(request.data, status=status.HTTP_201_CREATED)
 
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)  
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)  
+            else:
+                return Response({'error': 'Can only post to /users/<str:group_name>/'}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response({'Post request error': 'Can only post to /users/<str:group_name>/'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Only admin users can create a new user.'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserDetailView(APIView):
@@ -257,29 +298,15 @@ class CustomObtainAuthToken(ObtainAuthToken):
         else:
             return Response(serializer.errors)
 
-# class AppointmentsForEmployeeIdView(APIView):
-#     """
-#     Read all appointments for a specific employee_id
-#     """
-#     permission_classes = [permissions.IsAuthenticated]
+class AppointmentsForUserView(APIView):
+    """
+    Read all appointments for a specific employee_id
+    """
+    permission_classes = [permissions.IsAuthenticated]
 
-#     def get(self, request, pk):
-#         execute_helper_functions()
+    def get(self, request, pk):
+        execute_helper_functions()
 
-#         appointments = Appointment.objects.filter(employee_id=pk)
-#         serializer = AppointmentSerializer(appointments, many=True)
-#         return Response(serializer.data)
-
-
-# class AppointmentsForCustomerIdView(APIView):
-#     """
-#     Read all appointments for a specific employee_id
-#     """
-#     permission_classes = [permissions.IsAuthenticated]
-
-#     def get(self, request, pk):
-#         execute_helper_functions()
-
-#         appointments = Appointment.objects.filter(customer_id=pk)
-#         serializer = AppointmentSerializer(appointments, many=True)
-#         return Response(serializer.data)
+        appointments = Appointment.objects.filter(Q(employee_id=pk) | Q(customer_id=pk))
+        serializer = AppointmentSerializer(appointments, many=True)
+        return Response(serializer.data)
