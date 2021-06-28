@@ -21,6 +21,13 @@ urlpatterns = [
     
     path('past-appointments/', views.PastAppointmentList.as_view(), name='past-appointment-list'),
     path('past-appointment/<int:pk>/', views.PastAppointmentDetail.as_view(), name='past-appointment-detail'),
+
+    path('schedules/', views.ScheduleList.as_view(), name='schedules-list'),
+    path('schedule/<int:pk>/', views.ScheduleDetail.as_view(), name='schedule-detail'),
+
+    path('menu/', views.MenuList.as_view(), name='menu-list'),
+    # path('menu/<int:pk>/', views.ScheduleDetail.as_view(), name='menu-detail'),
+
 ]
 
 # include auth views

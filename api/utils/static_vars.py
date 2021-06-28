@@ -3,6 +3,8 @@ MAX_APPOINTMENT_AGE_DAYS = 5
 
 GROUPS = ['Employees', 'Customers', 'Managers', 'Admins']
 
+CATEGORIES = ['Nails', 'Dip Nails', 'Add-Ons', 'Eyelashes', 'Mani Pedi', 'Kids 10 & Under', 'Waxing']
+
 
 
 

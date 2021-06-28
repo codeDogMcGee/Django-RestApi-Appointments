@@ -1,12 +1,12 @@
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
-from django.core.validators import MinLengthValidator
+from django.core.validators import MinLengthValidator, int_list_validator
 from django.utils.translation import gettext_lazy as _
 from django.db import models
 from django.utils import timezone
 
 from api.managers import CustomUserManager
 from api.utils.format_phone_number import format_phone_number
-from api.validators import is_int
+from api.validators import is_int, service_category_exists
 
 
 class HelperSettingsModel(models.Model):
@@ -39,12 +39,52 @@ class ApiUser(AbstractBaseUser, PermissionsMixin):
         return f'{self.name} | {format_phone_number(self.phone)}'
 
 
+class ServiceMenuModel(models.Model):
+    name = models.CharField(max_length=100, blank=False, null=False, unique=True)
+    category = models.CharField(max_length=100, blank=False, null=False, validators=[service_category_exists.validate])
+    price = models.FloatField(blank=False, null=False)
+    time_minutes = models.IntegerField(blank=False, null=False)
+
+
+class EmployeeScheduleModel(models.Model):
+    '''
+    One schedule record will be created for each employee
+    '''
+    
+    employee = models.OneToOneField(ApiUser, on_delete=models.CASCADE, primary_key=True)
+
+    days_off = models.CharField(max_length=1000, validators=[int_list_validator], blank=True, null=True) # list of comma seperated days [20210704, 20211124]
+
+    monday_first_appointment = models.TimeField(blank=False, null=True)
+    monday_last_appointment = models.TimeField(blank=False, null=True)
+
+    tuesday_first_appointment = models.TimeField(blank=False, null=True)
+    tuesday_last_appointment = models.TimeField(blank=False, null=True)
+
+    wednesday_first_appointment = models.TimeField(blank=False, null=True)
+    wednesday_last_appointment = models.TimeField(blank=False, null=True)
+
+    thursday_first_appointment = models.TimeField(blank=False, null=True)
+    thursday_last_appointment = models.TimeField(blank=False, null=True)
+
+    friday_first_appointment = models.TimeField(blank=False, null=True)
+    friday_last_appointment = models.TimeField(blank=False, null=True)
+
+    saturday_first_appointment = models.TimeField(blank=False, null=True)
+    saturday_last_appointment = models.TimeField(blank=False, null=True)
+
+    sunday_first_appointment = models.TimeField(blank=False, null=True)
+    sunday_last_appointment = models.TimeField(blank=False, null=True)
+
+    
+
+
 class Appointment(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     start_time = models.DateTimeField(blank=False)
     end_time = models.DateTimeField(blank=False)
-    customer = models.ForeignKey(ApiUser, related_name='customer', on_delete=models.CASCADE, blank=False, null=True)
-    employee = models.ForeignKey(ApiUser, related_name='employee', on_delete=models.CASCADE, blank=False, null=True)
+    customer = models.ForeignKey(ApiUser, related_name='customer', on_delete=models.CASCADE, blank=False, null=False)
+    employee = models.ForeignKey(ApiUser, related_name='employee', on_delete=models.CASCADE, blank=False, null=False)
 
     def __str__(self):
         return f'StartTime={self.start_time} | EndTime={self.end_time} | Employee={self.employee} | Customer={self.customer}'
@@ -66,3 +106,4 @@ class PastAppointment(models.Model):
 
     class Meta:
         ordering = ['start_time']
+

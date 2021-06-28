@@ -5,13 +5,14 @@ from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 from rest_framework import exceptions
 
-from api.models import Appointment, GroupIdsModel, PastAppointment, HelperSettingsModel, ApiUser
-from api.validators import prevent_double_book, is_valid_password, is_int
+from api.models import Appointment, EmployeeScheduleModel, GroupIdsModel, PastAppointment, HelperSettingsModel, ApiUser, ServiceMenuModel
+from api.validators import prevent_double_book, appointment_fits_employee_schedule, is_valid_password, is_int
 
 
 class AppointmentSerializer(serializers.ModelSerializer):
     
     def validate(self, appointment):
+        appointment = appointment_fits_employee_schedule.validate(appointment)
         return prevent_double_book.validate(appointment)
 
     class Meta:
@@ -51,7 +52,7 @@ class AppUserNoPhoneSerializer(serializers.ModelSerializer):
         fields = ['id', 'name']
 
 
-class AppUserSelfSerializer(serializers.ModelSerializer):
+class AppUserWithGroupsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ApiUser
@@ -64,6 +65,19 @@ class AppCreateUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = ApiUser
         fields = ['id', 'phone', 'name', 'password_submitted']
+
+
+class ServiceMenuSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ServiceMenuModel
+        fields = '__all__'
+
+
+class EmployeeScheduleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EmployeeScheduleModel
+        fields = '__all__'
 
 
 class AuthTokenSerializer(serializers.Serializer):

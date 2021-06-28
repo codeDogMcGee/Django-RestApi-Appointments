@@ -2,7 +2,6 @@ from django.core.exceptions import ValidationError
 from django.http.response import Http404
 from django.shortcuts import render
 from django.views import View
-# from django.contrib.auth import authenticate
 from django.db.models import Q
 
 from rest_framework.response import Response
@@ -11,9 +10,8 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.authtoken.views import ObtainAuthToken
 
-from api.models import Appointment, GroupIdsModel, PastAppointment, HelperSettingsModel, ApiUser
+from api.models import Appointment, EmployeeScheduleModel, GroupIdsModel, PastAppointment, HelperSettingsModel, ApiUser, ServiceMenuModel
 from api import serializers
-# from api.serializers import AppointmentSerializer, GroupIdsSerializer, HelperSettingsSerializer, AppUserSerializer, AppUserNoPhoneSerializer, AppCreateUserSerializer, PastAppointmentSerializer, AuthTokenSerializer
 from api.utils.get_or_create_groups import get_or_create_groups
 from api.utils.manage_appointments import execute_helper_functions
 from api.validators import is_valid_group
@@ -35,7 +33,7 @@ class UserSelfView(APIView):
 
     def get(self, request):
 
-        serializer = serializers.AppUserSelfSerializer(request.user)
+        serializer = serializers.AppUserWithGroupsSerializer(request.user)
 
         return Response(serializer.data)
 
@@ -52,7 +50,7 @@ class AppointmentList(APIView):
             serializer = serializers.AppointmentSerializer(appointments, many=True)
             return Response(serializer.data)
         else:
-            return Response({'error': 'Must be admin user to view all appointments'})
+            return Response({'error': 'Unauthorized to view this page.'})
 
     def post(self, request):
         serializer = serializers.AppointmentSerializer(data=request.data)
@@ -97,6 +95,20 @@ class AppointmentDetail(APIView):
         appointment = self._get_appointment(pk)
         appointment.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class AppointmentsForUserView(APIView):
+    """
+    Read all appointments for a specific employee_id
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, pk):
+        execute_helper_functions()
+
+        appointments = Appointment.objects.filter(Q(employee_id=pk) | Q(customer_id=pk))
+        serializer = serializers.AppointmentSerializer(appointments, many=True)
+        return Response(serializer.data)
 
 
 class PastAppointmentList(APIView):
@@ -172,8 +184,8 @@ class UsersView(APIView):
 
         elif request.user.is_staff:
             # admins can view all users
-            users = ApiUser.filter(is_active=True)
-            serializer = serializers.AppUserSerializer(users, many=True)
+            users = ApiUser.objects.filter(is_active=True)
+            serializer = serializers.AppUserWithGroupsSerializer(users, many=True)
     
         else:
             return Response('Unauthorized to view this page.')
@@ -190,19 +202,24 @@ class UsersView(APIView):
                 serializer = serializers.AppCreateUserSerializer(data=request.data)
                 if serializer.is_valid():
 
+                    # make sure a valid group name was passed to the url
                     try:
                         group_name = is_valid_group.validate(group_name)
                     except ValidationError:
                         return Response({'Invalid Group Error': f"[{group_name}] is not a valid group."}, status=status.HTTP_400_BAD_REQUEST)
 
+                    # create new user object
                     new_user = ApiUser.objects.create_user(
                         phone = serializer.data['phone'], 
                         name = serializer.data['name'], 
                         password = serializer.data['password_submitted']
                     )
 
-                    customer_group = groups_dict[group_name]
-                    customer_group.user_set.add(new_user)
+                    # add the new user to the appropriate group
+                    group = groups_dict[group_name]
+                    group.user_set.add(new_user)
+
+                    # set up employee schedule
 
                     return Response(request.data, status=status.HTTP_201_CREATED)
 
@@ -240,14 +257,6 @@ class UserDetailView(APIView):
             serializer = serializers.AppUserSerializer(user)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
-    # def delete(self, request, pk):
-    #     user, err = self._get_user(pk, request.user)
-    #     if err['error'] != '':
-    #         return Response(status=status.HTTP_403_FORBIDDEN)
-    #     else:    
-    #         user.delete()
-    #         return Response(status=status.HTTP_204_NO_CONTENT)
-
     def put(self, request, pk):
         '''
         A full user object must be passed:
@@ -257,6 +266,7 @@ class UserDetailView(APIView):
             "password_submitted": "password1"   
         }
         '''
+
 
         if 'password_submitted' in request.data.keys():
             
@@ -280,6 +290,12 @@ class UserDetailView(APIView):
 
         else:
             return Response({'Password not provided error': 'Must provide a password with a user update.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # def delete(self, request, pk):
+        # TODO: to delete a user set up delete route 
+        #       that doesn't delete but deactivates the user
+        #       If it's an employee then make sure to also delete
+        #       their schedule
 
 
 class HelperSettingsView(APIView):
@@ -310,15 +326,134 @@ class CustomObtainAuthToken(ObtainAuthToken):
         else:
             return Response(serializer.errors)
 
-class AppointmentsForUserView(APIView):
+
+class ScheduleList(APIView):
     """
-    Read all appointments for a specific employee_id
+    Read all appointments, or create new appointment
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request):
+        schedules = EmployeeScheduleModel.objects.all()
+        serializer = serializers.EmployeeScheduleSerializer(schedules, many=True)
+        return Response(serializer.data)
+
+    # only admins and managers can post
+    def post(self, request):
+        request_user_groups = request.user.groups.all()
+
+        if len(request_user_groups) == 1:
+            request_user_group = request_user_groups[0]
+
+            if request_user_group.name in ['Admins', 'Managers']:
+                serializer = serializers.EmployeeScheduleSerializer(data=request.data)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response(serializer.data, status=status.HTTP_201_CREATED)
+                else:
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            else: 
+                return Response('User not authorized to post a new schedule.')
+        else:
+            raise Exception(f"User is not a member of exactly one group. {list(request_user_groups)}")
+
+
+class ScheduleDetail(APIView):
+    """
+    Read, Update, Delete functionality for one Appointment
+
+    Customers and Employees should only be able to see their own appointments
     """
     permission_classes = [permissions.IsAuthenticated]
 
-    def get(self, request, pk):
-        execute_helper_functions()
+    # TODO: only let people change (PUT or DELETE) their own schedules, or admin, or manager
 
-        appointments = Appointment.objects.filter(Q(employee_id=pk) | Q(customer_id=pk))
-        serializer = serializers.AppointmentSerializer(appointments, many=True)
+    def _get_schedule(self, pk):
+        try:
+            return EmployeeScheduleModel.objects.get(pk=pk)
+        except EmployeeScheduleModel.DoesNotExist:
+            raise Http404
+
+    def get(self, request, pk):
+        schedule = self._get_schedule(pk)
+        serializer = serializers.EmployeeScheduleSerializer(schedule)
         return Response(serializer.data)
+
+    def put(self, request, pk):
+        schedule = self._get_schedule(pk)
+        serializer = serializers.EmployeeScheduleSerializer(schedule, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        schedule = self._get_schedule(pk)
+        schedule.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class MenuList(APIView):
+    """
+    Read all service items, or create new item
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        schedules = ServiceMenuModel.objects.all()
+        serializer = serializers.ServiceMenuSerializer(schedules, many=True)
+        return Response(serializer.data)
+
+    # only admins and managers can post
+    def post(self, request):
+        request_user_groups = request.user.groups.all()
+
+        if len(request_user_groups) == 1:
+            request_user_group = request_user_groups[0]
+
+            if request_user_group.name in ['Admins', 'Managers']:
+                serializer = serializers.ServiceMenuSerializer(data=request.data)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response(serializer.data, status=status.HTTP_201_CREATED)
+                else:
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            else: 
+                return Response('User not authorized to add menu item.')
+        else:
+            raise Exception(f"User is not a member of exactly one group. {list(request_user_groups)}")
+
+
+# class ScheduleDetail(APIView):
+#     """
+#     Read, Update, Delete functionality for one Appointment
+
+#     Customers and Employees should only be able to see their own appointments
+#     """
+#     permission_classes = [permissions.IsAuthenticated]
+
+#     # TODO: only let people change (PUT or DELETE) their own schedules, or admin, or manager
+
+#     def _get_schedule(self, pk):
+#         try:
+#             return EmployeeScheduleModel.objects.get(pk=pk)
+#         except EmployeeScheduleModel.DoesNotExist:
+#             raise Http404
+
+#     def get(self, request, pk):
+#         schedule = self._get_schedule(pk)
+#         serializer = serializers.EmployeeScheduleSerializer(schedule)
+#         return Response(serializer.data)
+
+#     def put(self, request, pk):
+#         schedule = self._get_schedule(pk)
+#         serializer = serializers.EmployeeScheduleSerializer(schedule, data=request.data)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+#     def delete(self, request, pk):
+#         schedule = self._get_schedule(pk)
+#         schedule.delete()
+#         return Response(status=status.HTTP_204_NO_CONTENT)
