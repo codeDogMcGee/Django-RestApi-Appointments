@@ -1,7 +1,7 @@
 # Django-REST API-Appointments
 
 ## REST API using Django Rest Framework. 
-This project will be used as the boilerplate for a custom appointments web app for a nail salon in Denver, Colorado.
+This project will be used as the boilerplate for a custom appointments web app for a nail salon in Denver, Colorado. A React front-end is under development and can be found [here](https://github.com/codeDogMcGee/React-Appointments).
 
 ### __Endpoints__
 Admin Only Endpoints:
@@ -11,9 +11,18 @@ users/
 users/<str:group_name>/   # POST here to create a user
 ```
 
+To receive an API token, post valid login information to:
+```
+api-token-auth/
+```
+
 Authenticated users can only GET, PUT, and DELETE their own profile:
 ```
 user/<int:pk>/
+```
+Authenticated users can get their own profile:
+```
+user/self/
 ```
 
 Appointments endpoints, accessable by authenticated users:
@@ -23,7 +32,6 @@ appointments/<int:pk>/
 past-appointments/
 past-appointments/<int:pk>/
 ```
-
 Other:
 ```
 groups/
@@ -69,7 +77,3 @@ For authentication purposes there are 3 user groups: __Customers__, __Employees_
 added the group.
 
 
-### __Django Website Front-End__
-Django website that connects to the appointments API and lets users view and make appointments (This is being replaced with a React front-end). 
-![Make appointment](images/make_appointment.PNG)
-![View appointments](images/user_appointments.PNG)

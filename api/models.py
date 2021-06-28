@@ -43,8 +43,6 @@ class Appointment(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     start_time = models.DateTimeField(blank=False)
     end_time = models.DateTimeField(blank=False)
-    # customer_id = models.IntegerField(blank=False)
-    # employee_id = models.IntegerField(blank=False)
     customer = models.ForeignKey(ApiUser, related_name='customer', on_delete=models.CASCADE, blank=False, null=True)
     employee = models.ForeignKey(ApiUser, related_name='employee', on_delete=models.CASCADE, blank=False, null=True)
 
@@ -60,8 +58,6 @@ class PastAppointment(models.Model):
     appointment_id = models.IntegerField(blank=False, null=False)
     start_time = models.DateTimeField(blank=False, null=False)
     end_time = models.DateTimeField(blank=False, null=False)
-    # customer_id = models.IntegerField(blank=False, null=False)
-    # employee_id = models.IntegerField(blank=False, null=False)
     customer = models.ForeignKey(ApiUser, related_name='past_appointment_customer', on_delete=models.CASCADE, blank=False, null=True)
     employee = models.ForeignKey(ApiUser, related_name='past_appointment_employee', on_delete=models.CASCADE, blank=False, null=True)
 

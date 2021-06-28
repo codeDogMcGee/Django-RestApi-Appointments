@@ -11,10 +11,11 @@ urlpatterns = [
     path('users/', views.UsersView.as_view(), name='users'),
     path('users/<str:group_name>/', views.UsersView.as_view(), name='users-groups'),
 
+    path('user/self/', views.UserSelfView.as_view(), name="user-self"),
     path('user/<int:pk>/', views.UserDetailView.as_view(), name='user-detail'),
     
     path('appointments/', views.AppointmentList.as_view(), name='appointment-list'),
-    path('appointment/<int:pk>/', views.AppointmentDetail.as_view(), name='appointment-detail'),
+    path('appointments/<int:pk>/', views.AppointmentDetail.as_view(), name='appointment-detail'),
 
     path('appointments-user/<int:pk>/', views.AppointmentsForUserView.as_view(), name='appointment-user'),
     

@@ -2,7 +2,7 @@ from django.core.exceptions import ValidationError
 from django.http.response import Http404
 from django.shortcuts import render
 from django.views import View
-from django.contrib.auth import authenticate
+# from django.contrib.auth import authenticate
 from django.db.models import Q
 
 from rest_framework.response import Response
@@ -10,10 +10,10 @@ from rest_framework import permissions
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.authtoken.views import ObtainAuthToken
-from api import serializers
 
 from api.models import Appointment, GroupIdsModel, PastAppointment, HelperSettingsModel, ApiUser
-from api.serializers import AppointmentSerializer, GroupIdsSerializer, HelperSettingsSerializer, AppUserSerializer, AppUserNoPhoneSerializer, AppCreateUserSerializer, PastAppointmentSerializer, AuthTokenSerializer
+from api import serializers
+# from api.serializers import AppointmentSerializer, GroupIdsSerializer, HelperSettingsSerializer, AppUserSerializer, AppUserNoPhoneSerializer, AppCreateUserSerializer, PastAppointmentSerializer, AuthTokenSerializer
 from api.utils.get_or_create_groups import get_or_create_groups
 from api.utils.manage_appointments import execute_helper_functions
 from api.validators import is_valid_group
@@ -27,6 +27,18 @@ class IndexView(View):
         return render(request, self.template_name)
 
 
+class UserSelfView(APIView):
+    """
+    Get user object with self
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+
+        serializer = serializers.AppUserSelfSerializer(request.user)
+
+        return Response(serializer.data)
+
 class AppointmentList(APIView):
     """
     Read all appointments, or create new appointment
@@ -37,13 +49,13 @@ class AppointmentList(APIView):
         execute_helper_functions()
         if request.user.is_staff: # permissions.IsAdminUser
             appointments = Appointment.objects.all()
-            serializer = AppointmentSerializer(appointments, many=True)
+            serializer = serializers.AppointmentSerializer(appointments, many=True)
             return Response(serializer.data)
         else:
             return Response({'error': 'Must be admin user to view all appointments'})
 
     def post(self, request):
-        serializer = AppointmentSerializer(data=request.data)
+        serializer = serializers.AppointmentSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -70,12 +82,12 @@ class AppointmentDetail(APIView):
         execute_helper_functions()
 
         appointment = self._get_appointment(pk)
-        serializer = AppointmentSerializer(appointment)
+        serializer = serializers.AppointmentSerializer(appointment)
         return Response(serializer.data)
 
     def put(self, request, pk):
         appointment = self._get_appointment(pk)
-        serializer = AppointmentSerializer(appointment, data=request.data)
+        serializer = serializers.AppointmentSerializer(appointment, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -97,7 +109,7 @@ class PastAppointmentList(APIView):
         execute_helper_functions()
 
         appointments = PastAppointment.objects.all()
-        serializer = PastAppointmentSerializer(appointments, many=True)
+        serializer = serializers.PastAppointmentSerializer(appointments, many=True)
         return Response(serializer.data)
 
 
@@ -117,7 +129,7 @@ class PastAppointmentDetail(APIView):
         execute_helper_functions()
 
         appointment = self._get_appointment(pk)
-        serializer = PastAppointmentSerializer(appointment)
+        serializer = serializers.PastAppointmentSerializer(appointment)
         return Response(serializer.data)
 
 
@@ -146,22 +158,22 @@ class UsersView(APIView):
                 (group_name == 'Employees' and 'Employees' in request_user_groups):
                 # if it's a customer requesting customers only give them themselves
                 users = [{'id': request.user.id, 'name': request.user.name, 'phone': request.user.phone}]
-                serializer = AppUserSerializer(users, many=True)
+                serializer = serializers.AppUserSerializer(users, many=True)
 
             elif (group_name == 'Customers' and 'Employees' in request_user_groups) or (request.user.is_staff):
                 # if an employee is requesting customers return them all active customers
                 users = ApiUser.objects.filter(is_active=True).filter(groups__name=group_name)
-                serializer = AppUserSerializer(users, many=True)
+                serializer = serializers.AppUserSerializer(users, many=True)
 
             elif group_name == 'Employees' and 'Customers' in request_user_groups:
                 # if a customer is requesting employees don't include the phone numbers
                 users = ApiUser.objects.filter(is_active=True).filter(groups__name=group_name)
-                serializer = AppUserNoPhoneSerializer(users, many=True)
+                serializer = serializers.AppUserNoPhoneSerializer(users, many=True)
 
         elif request.user.is_staff:
             # admins can view all users
             users = ApiUser.filter(is_active=True)
-            serializer = AppUserSerializer(users, many=True)
+            serializer = serializers.AppUserSerializer(users, many=True)
     
         else:
             return Response('Unauthorized to view this page.')
@@ -175,7 +187,7 @@ class UsersView(APIView):
             if group_name != '':
                 groups_dict = get_or_create_groups()
 
-                serializer = AppCreateUserSerializer(data=request.data)
+                serializer = serializers.AppCreateUserSerializer(data=request.data)
                 if serializer.is_valid():
 
                     try:
@@ -225,7 +237,7 @@ class UserDetailView(APIView):
         if err['error'] != '':
             return Response(err, status=status.HTTP_403_FORBIDDEN)
         else:
-            serializer = AppUserSerializer(user)
+            serializer = serializers.AppUserSerializer(user)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
     # def delete(self, request, pk):
@@ -252,7 +264,7 @@ class UserDetailView(APIView):
             if err['error'] != '':
                 return Response(err, status=status.HTTP_403_FORBIDDEN)
             else:
-                serializer = AppCreateUserSerializer(user, data=request.data)
+                serializer = serializers.AppCreateUserSerializer(user, data=request.data)
                 if serializer.is_valid():
                     serializer.save()
 
@@ -275,7 +287,7 @@ class HelperSettingsView(APIView):
 
     def get(self, request):
         helpers = HelperSettingsModel.objects.all()
-        serializer = HelperSettingsSerializer(helpers, many=True)
+        serializer = serializers.HelperSettingsSerializer(helpers, many=True)
         return Response(serializer.data)
 
 
@@ -284,7 +296,7 @@ class GroupIdsView(APIView):
 
     def get(self, request):
         groups = GroupIdsModel.objects.all()
-        serializer = GroupIdsSerializer(groups, many=True)
+        serializer = serializers.GroupIdsSerializer(groups, many=True)
         return Response(serializer.data)
 
         
@@ -292,7 +304,7 @@ class CustomObtainAuthToken(ObtainAuthToken):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        serializer = AuthTokenSerializer(data=request.data)
+        serializer = serializers.AuthTokenSerializer(data=request.data)
         if serializer.is_valid():
             return Response(serializer.validated_data)
         else:
@@ -308,5 +320,5 @@ class AppointmentsForUserView(APIView):
         execute_helper_functions()
 
         appointments = Appointment.objects.filter(Q(employee_id=pk) | Q(customer_id=pk))
-        serializer = AppointmentSerializer(appointments, many=True)
+        serializer = serializers.AppointmentSerializer(appointments, many=True)
         return Response(serializer.data)
