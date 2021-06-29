@@ -6,14 +6,16 @@ from rest_framework.authtoken.models import Token
 from rest_framework import exceptions
 
 from api.models import Appointment, EmployeeScheduleModel, GroupIdsModel, PastAppointment, HelperSettingsModel, ApiUser, ServiceMenuModel
-from api.validators import prevent_double_book, appointment_fits_employee_schedule, is_valid_password, is_int
+from api.validators import prevent_double_book, appointment_fits_employee_schedule, is_valid_password, is_int, under_max_appointments
 
 
 class AppointmentSerializer(serializers.ModelSerializer):
     
     def validate(self, appointment):
         appointment = appointment_fits_employee_schedule.validate(appointment)
-        return prevent_double_book.validate(appointment)
+        appointment = under_max_appointments.validate(appointment)
+        appointment = prevent_double_book.validate(appointment)
+        return appointment
 
     class Meta:
         model = Appointment

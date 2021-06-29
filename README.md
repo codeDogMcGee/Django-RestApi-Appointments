@@ -1,7 +1,10 @@
 # Django-REST API-Appointments
 
-## REST API using Django Rest Framework. 
+## REST API using Django Rest Framework
 This project will be used as the boilerplate for a custom appointments web app for a nail salon in Denver, Colorado. A React front-end is under development and can be found [here](https://github.com/codeDogMcGee/React-Appointments).
+
+### __Database__
+PostgreSQL 13
 
 ### __Endpoints__
 Admin Only Endpoints:
