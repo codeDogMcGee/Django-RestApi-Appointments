@@ -296,6 +296,10 @@ class UserDetailView(APIView):
         #       that doesn't delete but deactivates the user
         #       If it's an employee then make sure to also delete
         #       their schedule
+    def delete(self, request, pk):
+        user, error = self._get_user(pk, request.user)
+        user.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class HelperSettingsView(APIView):
