@@ -11,9 +11,15 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 from os import getenv
+from dotenv import load_dotenv
 from pathlib import Path
+import logging.config
 
 from . import postgres_status
+
+
+load_dotenv('.env')
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,12 +32,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = getenv('DJANGO_SECURITY_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = getenv('DJANGO_DEBUG_MODE')
+DEBUG = getenv('DJANGO_DEBUG_MODE', False)
 
 # ALLOWED_HOSTS = ['127.0.0.1', '0.0.0.0']
 # To allow unrestricted access
-ALLOWED_HOSTS = ['*']
-CORS_ORIGIN_ALLOW_ALL = True
+ALLOWED_HOSTS = getenv('DJANGO_ALLOWED_HOSTS', '127.0.0.1').split(',')
+# CORS_ORIGIN_ALLOW_ALL = True
 # To restrict access use:
 # ALLOWED_HOSTS=['http://localhost:5000']
 # CORS_ORIGIN_ALLOW_ALL = False
@@ -84,7 +90,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'corsheaders',
+    # 'corsheaders',
 
     # created apps
     'api.apps.ApiConfig',
@@ -130,16 +136,16 @@ WSGI_APPLICATION = 'appointment_api.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
-postgres_status.check_status(getenv('POSTGRES_NAME'), getenv('POSTGRES_USER'), getenv('POSTGRES_PASSWORD'), getenv('POSTGRES_HOST'), getenv('POSTGRES_PORT'))
+postgres_status.check_status(getenv('DATABASE_NAME'), getenv('DATABASE_USER'), getenv('DATABASE_PASSWORD'), getenv('DATABASE_HOST'), getenv('DATABASE_PORT'))
 
 DATABASES = {
    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': getenv('POSTGRES_NAME'),
-        'USER': getenv('POSTGRES_USER'),
-        'PASSWORD': getenv('POSTGRES_PASSWORD'),
-        'HOST': getenv('POSTGRES_HOST'),
-        'PORT': getenv('POSTGRES_PORT'),
+        'ENGINE': f'django.db.backends.{getenv("DATABASE_ENGINE", "sqlite3")}',
+        'NAME': getenv('DATABASE_NAME', 'appointments_dev'),
+        'USER': getenv('DATABASE_USER', 'projectuser'),
+        'PASSWORD': getenv('DATABASE_PASSWORD', 'password'),
+        'HOST': getenv('DATABASE_HOST', '127.0.0.1'),
+        'PORT': getenv('DATABASE_PORT', 5432),
     }
 }
 
@@ -184,3 +190,33 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Logging Configuration
+
+# Clear prev config
+LOGGING_CONFIG = None
+
+# Get loglevel from env
+LOGLEVEL = getenv('DJANGO_LOGLEVEL', 'info').upper()
+
+logging.config.dictConfig({
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'console': {
+            'format': '%(asctime)s %(levelname)s [%(name)s:%(lineno)s] %(module)s %(process)d %(thread)d %(message)s',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'console',
+        },
+    },
+    'loggers': {
+        '': {
+            'level': LOGLEVEL,
+            'handlers': ['console',],
+        },
+    },
+})
