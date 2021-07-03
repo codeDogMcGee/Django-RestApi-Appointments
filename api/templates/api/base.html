@@ -18,17 +18,16 @@
             <a href="/"><h2>Logo</h2></a>
             <nav>
                 {% if request.user.is_authenticated %}
-                    <p class="header-user-name"><a href="/user-page/">Welcome, {{ request.user.name }}!</a></p>
-                    <a href="/logout/?next=/">Logout</a>
+                    <a href="/admin/logout/?next=/">Logout</a>
                 {% else %}
-                    {% comment %} 
+                    {% comment %}
                         TEMPLATE_CONTEXT_PROCESSORS in settings allows request.path
                         to reference the path the request came from so the user
                         can be redirected back after logging in.
                     {% endcomment %}
                     <a href="/admin/login/?next=/admin/">Login</a>
                 {% endif %}
-                
+
                 {% if request.user.is_staff %}
                     <a href="/admin/">Admin</a>
                 {% endif %}
@@ -36,7 +35,7 @@
         </header>
 
             {% block content %}{% endblock %}
-            
+
     </div>
 </body>
 </html>
