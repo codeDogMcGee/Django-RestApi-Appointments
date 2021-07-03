@@ -25,6 +25,6 @@ services:
     links:
       - web:web
     ports:
-      - 1337:80
+      - 8080:80
     depends_on:
       - web
