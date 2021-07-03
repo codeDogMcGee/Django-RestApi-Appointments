@@ -26,7 +26,7 @@ urlpatterns = [
     path('schedule/<int:pk>/', views.ScheduleDetail.as_view(), name='schedule-detail'),
 
     path('menu/', views.MenuList.as_view(), name='menu-list'),
-    # path('menu/<int:pk>/', views.ScheduleDetail.as_view(), name='menu-detail'),
+    # path('menu/<int:pk>/', views..as_view(), name='menu-detail'),
 
 ]
 

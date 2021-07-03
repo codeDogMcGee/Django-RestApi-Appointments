@@ -3,6 +3,8 @@ version: "3.9"
 services:
   db:
     image: postgres:latest
+    env_file: 
+      - .aws.dev.env
     volumes:
       - ./data/db:/var/lib/postgresql/data
     environment:
