@@ -7,7 +7,29 @@ class CustomUserManager(BaseUserManager):
     CustomUser uses the phone as unique 
     identifier rather than username.
     """
-    def create_user(self, email, name, password, **extra_fields):
+    def create_user(self, email, name, phone, password, **extra_fields):
+        if not email:
+            raise ValueError(_('Email is required.'))
+        if not name:
+            raise ValueError(_('Name is required.'))
+        if not name:
+            raise ValueError(_('Phone number is required.'))
+        if not password:
+            raise ValueError(_('Password is required.'))
+
+        extra_fields.setdefault('is_active', True)
+
+        email = email
+        name = name
+        phone = phone
+        
+        user = self.model(email=email, name=name, phone=phone, **extra_fields)
+        user.set_password(password)
+        user.save()
+
+        return user
+
+    def create_superuser(self, email, name, password, **extra_fields):
         if not email:
             raise ValueError(_('Email is required.'))
         if not name:
@@ -15,16 +37,6 @@ class CustomUserManager(BaseUserManager):
         if not password:
             raise ValueError(_('Password is required.'))
 
-        email = email
-        name = name
-        
-        user = self.model(email=email, name=name,  **extra_fields)
-        user.set_password(password)
-        user.save()
-
-        return user
-
-    def create_superuser(self, email, password, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('is_active', True)
@@ -35,6 +47,9 @@ class CustomUserManager(BaseUserManager):
             raise ValueError(_('Superuser mush have is_superuser=True'))
 
         superuser = self.model(email=email, **extra_fields)
+
+        superuser.name = name
+
         superuser.set_password(password)
         superuser.save()
 

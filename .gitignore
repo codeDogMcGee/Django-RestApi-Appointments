@@ -1,12 +1,21 @@
+# env
 venv
-data
-.idea
-.vscode
-secrets.*
-__pycache__
-db.sqlite3
-appointments_dev
-migrations
 *.temp.*
 .env
 *.env
+
+# docker
+data
+
+# ide
+.idea
+.vscode
+__pycache__
+
+#dbs
+db.*
+
+# other
+secrets.*
+migrations
+sent_emails

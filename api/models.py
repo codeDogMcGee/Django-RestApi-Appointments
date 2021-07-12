@@ -1,5 +1,5 @@
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
-from django.core.validators import int_list_validator #MinLengthValidator
+from django.core.validators import int_list_validator, MinLengthValidator
 from django.utils.translation import gettext_lazy as _
 from django.db import models
 from django.utils import timezone
@@ -19,11 +19,11 @@ class GroupIdsModel(models.Model):
 
 
 class ApiUser(AbstractBaseUser, PermissionsMixin):
-    # phone = models.CharField(_('phone number'), max_length=10, unique=True, blank=False, validators=[MinLengthValidator(10), is_int.validate])
     email = models.EmailField(_('email'), unique=True, max_length=100, blank=False, null=False)
-    created = models.DateTimeField(auto_now_add=True, auto_created=True)    
     name = models.CharField(_('name'), max_length=100, blank=False)
-
+    phone = models.CharField(_('phone number'), max_length=10, unique=True, blank=False, validators=[MinLengthValidator(10), is_int.validate])
+    
+    created = models.DateTimeField(auto_now_add=True, auto_created=True)    
     last_appointment_datetime = models.DateTimeField(null=True)
     last_appointment_other_user_id = models.IntegerField(null=True)
 
@@ -32,7 +32,7 @@ class ApiUser(AbstractBaseUser, PermissionsMixin):
     date_joined = models.DateTimeField(auto_now_add=True)
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = []
+    REQUIRED_FIELDS = ['name', 'phone']
 
     objects = CustomUserManager()
 
