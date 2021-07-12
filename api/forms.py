@@ -6,10 +6,10 @@ from .models import ApiUser
 class ApiUserCreationForm(UserCreationForm):
     class Meta:
         model = ApiUser
-        fields = ('phone', 'name', 'groups',)
+        fields = ('email', 'name', 'groups',)
 
 
 class ApiUserChangeForm(UserChangeForm):
     class Meta:
         model = ApiUser
-        fields = ('phone', 'name', 'groups',)
+        fields = ('email', 'name', 'groups',)

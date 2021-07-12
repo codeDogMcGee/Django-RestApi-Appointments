@@ -18,7 +18,7 @@ import logging.config
 from . import postgres_status
 
 
-load_dotenv('.env')
+load_dotenv('.sqlite.dev.env')
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -35,13 +35,7 @@ SECRET_KEY = getenv('DJANGO_SECURITY_KEY')
 DEBUG = getenv('DJANGO_DEBUG_MODE', False)
 
 # ALLOWED_HOSTS = ['127.0.0.1', '0.0.0.0']
-# To allow unrestricted access
 ALLOWED_HOSTS = getenv('DJANGO_ALLOWED_HOSTS', '127.0.0.1').split(',')
-# CORS_ORIGIN_ALLOW_ALL = True
-# To restrict access use:
-# ALLOWED_HOSTS=['http://localhost:5000']
-# CORS_ORIGIN_ALLOW_ALL = False
-# CORS_ORIGIN_WHITELIST = ('http://localhost:5000',)
 
 
 # Application definition
@@ -90,7 +84,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # 'corsheaders',
 
     # created apps
     'api.apps.ApiConfig',
@@ -136,13 +129,14 @@ WSGI_APPLICATION = 'appointment_api.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
-postgres_status.check_status(getenv('DATABASE_NAME'), getenv('DATABASE_USER'), getenv('DATABASE_PASSWORD'), getenv('DATABASE_HOST'), getenv('DATABASE_PORT'))
+if 'postgresql' in getenv("DATABASE_ENGINE", ''):
+    postgres_status.check_status(getenv('DATABASE_NAME'), getenv('DATABASE_USER'), getenv('DATABASE_PASSWORD'), getenv('DATABASE_HOST'), getenv('DATABASE_PORT'))
 
 DATABASES = {
    'default': {
         'ENGINE': f'django.db.backends.{getenv("DATABASE_ENGINE", "sqlite3")}',
-        'NAME': getenv('DATABASE_NAME', 'appointments_dev'),
-        'USER': getenv('DATABASE_USER', 'projectuser'),
+        'NAME': getenv('DATABASE_NAME', 'appointments'),
+        'USER': getenv('DATABASE_USER', 'api_user'),
         'PASSWORD': getenv('DATABASE_PASSWORD', 'password'),
         'HOST': getenv('DATABASE_HOST', '127.0.0.1'),
         'PORT': getenv('DATABASE_PORT', 5432),
@@ -220,3 +214,7 @@ logging.config.dictConfig({
         },
     },
 })
+
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+EMAIL_FILE_PATH = BASE_DIR.joinpath('sent_emails')

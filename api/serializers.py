@@ -5,7 +5,7 @@ from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 from rest_framework import exceptions
 
-from api.models import Appointment, EmployeeScheduleModel, GroupIdsModel, PastAppointment, HelperSettingsModel, ApiUser, ServiceMenuModel
+from api.models import Appointment, EmployeeScheduleModel, GroupIdsModel, PastAppointment, HelperSettingsModel, ApiUser, ServiceMenuModel, EmailVerificationToken
 from api.validators import prevent_double_book, appointment_fits_employee_schedule, is_valid_password, is_int, under_max_appointments
 
 
@@ -45,20 +45,26 @@ class AppUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ApiUser
-        fields = ['id', 'phone', 'name']
+        fields = ['id', 'email', 'name']
 
-class AppUserNoPhoneSerializer(serializers.ModelSerializer):
+class AppUserNameOnlySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ApiUser
         fields = ['id', 'name']
+
+class AppUserEmailOnlySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ApiUser
+        fields = ['id', 'email']
 
 
 class AppUserWithGroupsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ApiUser
-        fields = ['id', 'phone', 'name', 'groups']
+        fields = ['id', 'email', 'name', 'groups']
 
 
 class AppCreateUserSerializer(serializers.ModelSerializer):
@@ -66,7 +72,15 @@ class AppCreateUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ApiUser
-        fields = ['id', 'phone', 'name', 'password_submitted']
+        fields = ['id', 'email', 'name', 'password_submitted']
+
+
+class AppUserChangePasswordSerializer(serializers.ModelSerializer):
+    password_submitted = serializers.CharField(max_length=100, validators=[is_valid_password.validate])
+
+    class Meta:
+        model = ApiUser
+        fields = ['id', 'email', 'password_submitted']
 
 
 class ServiceMenuSerializer(serializers.ModelSerializer):
@@ -83,19 +97,24 @@ class EmployeeScheduleSerializer(serializers.ModelSerializer):
 
 
 class AuthTokenSerializer(serializers.Serializer):
-    phone = serializers.CharField(required=True, max_length=10, validators=[is_int.validate, MinLengthValidator(10)])
+    email = serializers.EmailField(required=True, max_length=100)
     password = serializers.CharField(required=True, max_length=100)
 
     def validate(self, data):
-        phone = data.get('phone', None)
+        email = data.get('email', None)
         password = data.get('password', None)
 
-        user = authenticate(username=phone, password=password)
+        user = authenticate(username=email, password=password)
 
         if user is None:
-            raise exceptions.AuthenticationFailed('Incorrect phone number and/or password.')
+            raise exceptions.AuthenticationFailed('Incorrect email number and/or password.')
         else:
             token, _ = Token.objects.get_or_create(user=user)
             return {
                 'token': token.key
             }
+
+class EmailVerificationTokenSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EmailVerificationToken
+        fields = '__all__'

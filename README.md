@@ -47,6 +47,7 @@ _Note: this will start a new project so you will need to shell into the Docker e
 Admin Only Endpoints:
 ```
 settings/
+groups/
 users/
 users/<str:group_name>/   # POST here to create a user
 ```
@@ -64,6 +65,18 @@ Authenticated users can also get their own profile without any additional inform
 ```
 user/self/
 ```
+A user can request an emailed link to change their password or set up a new account. Tokens are valid for 30 minutes.
+```
+email-verification-token/
+```
+The link will take the user to the appropriate enpoint:
+```
+create-customer/<str:key>
+
+OR
+
+reset-password/<str:key>
+```
 
 Appointments endpoints, accessable by authenticated users:
 ```
@@ -80,11 +93,6 @@ schedules/
 schedule/<int:pk>/
 menu/
 menu/<int:pk>/
-```
-
-Other:
-```
-groups/
 ```
 
 ### __Create a Local Django Environment__
@@ -117,7 +125,7 @@ python manage.py drf_create_token username
 A registered user can also request a token via the __api-token-auth/__ endpoint buy submitting a POST request like:
 ```
 {
-    "username": "username",
+    "phone": "phone_number",
     "password": "password"
 }
 ```

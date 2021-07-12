@@ -5,6 +5,7 @@ data
 secrets.*
 __pycache__
 db.sqlite3
+appointments_dev
 migrations
 *.temp.*
 .env

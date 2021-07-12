@@ -5,7 +5,7 @@ from api.utils.create_group_id_object import create_group_id_object
 from api.models import ApiUser
 
 
-def get_or_create_groups() -> dict[int, object]:
+def get_or_create_groups() -> dict[str, object]:
     output = {}
     
     for group_name in GROUPS:
@@ -22,4 +22,4 @@ def get_or_create_groups() -> dict[int, object]:
                     group.user_set.add(su)
 
 
-    return output
+    return output  # {group_name: group, ...}

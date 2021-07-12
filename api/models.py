@@ -1,5 +1,5 @@
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
-from django.core.validators import MinLengthValidator, int_list_validator
+from django.core.validators import int_list_validator #MinLengthValidator
 from django.utils.translation import gettext_lazy as _
 from django.db import models
 from django.utils import timezone
@@ -19,7 +19,8 @@ class GroupIdsModel(models.Model):
 
 
 class ApiUser(AbstractBaseUser, PermissionsMixin):
-    phone = models.CharField(_('phone number'), max_length=10, unique=True, blank=False, validators=[MinLengthValidator(10), is_int.validate])
+    # phone = models.CharField(_('phone number'), max_length=10, unique=True, blank=False, validators=[MinLengthValidator(10), is_int.validate])
+    email = models.EmailField(_('email'), unique=True, max_length=100, blank=False, null=False)
     created = models.DateTimeField(auto_now_add=True, auto_created=True)    
     name = models.CharField(_('name'), max_length=100, blank=False)
 
@@ -30,13 +31,13 @@ class ApiUser(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(auto_now_add=True)
 
-    USERNAME_FIELD = 'phone'
+    USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
 
     objects = CustomUserManager()
 
     def __str__(self):
-        return f'{self.name} | {format_phone_number(self.phone)}'
+        return self.name
 
 
 class ServiceMenuModel(models.Model):
@@ -106,4 +107,12 @@ class PastAppointment(models.Model):
 
     class Meta:
         ordering = ['start_time']
+
+
+class EmailVerificationToken(models.Model):
+    email = models.EmailField(blank=False, null=False, unique=True)
+    key = models.CharField(max_length=200, unique=True) # can set default=some_key_gen_method to auto generate the key
+    created = models.DateTimeField(auto_now_add=True)
+    keep_alive_seconds = models.IntegerField(default=1800)
+
 
