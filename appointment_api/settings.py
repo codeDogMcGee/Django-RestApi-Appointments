@@ -35,7 +35,8 @@ SECRET_KEY = getenv('DJANGO_SECURITY_KEY')
 DEBUG = getenv('DJANGO_DEBUG_MODE', False)
 
 # ALLOWED_HOSTS = ['127.0.0.1', '0.0.0.0']
-ALLOWED_HOSTS = getenv('DJANGO_ALLOWED_HOSTS', '127.0.0.1').split(',')
+# ALLOWED_HOSTS = getenv('DJANGO_ALLOWED_HOSTS', '127.0.0.1').split(',')
+CORS_ALLOWED_ORIGINS = getenv('DJANGO_ALLOWED_HOSTS', 'http://127.0.0.1:3000').split(',')
 
 
 # Application definition
@@ -89,19 +90,23 @@ INSTALLED_APPS = [
     'api.apps.ApiConfig',
 
     # third party apps
+    'corsheaders',
     'rest_framework',
     'rest_framework.authtoken',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware', 
 
+    
     'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
@@ -187,33 +192,33 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Logging Configuration
 
-# Clear prev config
-LOGGING_CONFIG = None
+# # Clear prev config
+# LOGGING_CONFIG = None
 
-# Get loglevel from env
-LOGLEVEL = getenv('DJANGO_LOGLEVEL', 'info').upper()
+# # Get loglevel from env
+# LOGLEVEL = getenv('DJANGO_LOGLEVEL', 'info').upper()
 
-logging.config.dictConfig({
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'console': {
-            'format': '%(asctime)s %(levelname)s [%(name)s:%(lineno)s] %(module)s %(process)d %(thread)d %(message)s',
-        },
-    },
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'console',
-        },
-    },
-    'loggers': {
-        '': {
-            'level': LOGLEVEL,
-            'handlers': ['console',],
-        },
-    },
-})
+# logging.config.dictConfig({
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'formatters': {
+#         'console': {
+#             'format': '%(asctime)s %(levelname)s [%(name)s:%(lineno)s] %(module)s %(process)d %(thread)d %(message)s',
+#         },
+#     },
+#     'handlers': {
+#         'console': {
+#             'class': 'logging.StreamHandler',
+#             'formatter': 'console',
+#         },
+#     },
+#     'loggers': {
+#         '': {
+#             'level': LOGLEVEL,
+#             'handlers': ['console',],
+#         },
+#     },
+# })
 
 # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'

@@ -6,7 +6,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework import exceptions
 
 from api.models import Appointment, EmployeeScheduleModel, GroupIdsModel, PastAppointment, HelperSettingsModel, ApiUser, ServiceMenuModel, EmailVerificationToken
-from api.validators import prevent_double_book, appointment_fits_employee_schedule, is_valid_password, is_int, under_max_appointments
+from api.validators import prevent_double_book, appointment_fits_employee_schedule, is_valid_password, max_services_per_appointment, under_max_appointments
 
 
 class AppointmentSerializer(serializers.ModelSerializer):
@@ -15,6 +15,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
         appointment = appointment_fits_employee_schedule.validate(appointment)
         appointment = under_max_appointments.validate(appointment)
         appointment = prevent_double_book.validate(appointment)
+        appointment = max_services_per_appointment.validate(appointment)
         return appointment
 
     class Meta:
@@ -45,7 +46,7 @@ class AppUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ApiUser
-        fields = ['id', 'email', 'name']
+        fields = ['id', 'email', 'name', 'phone']
 
 class AppUserNameOnlySerializer(serializers.ModelSerializer):
 
@@ -53,18 +54,18 @@ class AppUserNameOnlySerializer(serializers.ModelSerializer):
         model = ApiUser
         fields = ['id', 'name']
 
-class AppUserEmailOnlySerializer(serializers.ModelSerializer):
+class AppUserEmailAndPhoneSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ApiUser
-        fields = ['id', 'email']
+        fields = ['id', 'email', 'phone']
 
 
 class AppUserWithGroupsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ApiUser
-        fields = ['id', 'email', 'name', 'groups']
+        fields = ['id', 'email', 'phone', 'name', 'groups']
 
 
 class AppCreateUserSerializer(serializers.ModelSerializer):
@@ -72,7 +73,7 @@ class AppCreateUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ApiUser
-        fields = ['id', 'email', 'name', 'password_submitted']
+        fields = ['id', 'email', 'name', 'phone', 'password_submitted']
 
 
 class AppUserChangePasswordSerializer(serializers.ModelSerializer):
@@ -107,7 +108,7 @@ class AuthTokenSerializer(serializers.Serializer):
         user = authenticate(username=email, password=password)
 
         if user is None:
-            raise exceptions.AuthenticationFailed('Incorrect email number and/or password.')
+            raise exceptions.AuthenticationFailed('Incorrect email and/or password.')
         else:
             token, _ = Token.objects.get_or_create(user=user)
             return {

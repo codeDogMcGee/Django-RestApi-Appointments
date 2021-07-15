@@ -15,8 +15,8 @@ urlpatterns = [
     path('users/<str:group_name>/', views.UsersView.as_view(), name='users-groups'),
     path('user/self/', views.UserSelfView.as_view(), name="user-self"),
     path('user/<int:pk>/', views.UserDetailView.as_view(), name='user-detail'),
-    path('create-customer/<str:key>', views.CreateCustomerView.as_view(), name='create-customer'),
-    path('reset-password/<str:key>', views.ResetPasswordView.as_view(), name='reset-password'),
+    path('create-customer/<str:key>/', views.CreateCustomerView.as_view(), name='create-customer'),
+    path('reset-password/<str:key>/', views.ResetPasswordView.as_view(), name='reset-password'),
     
     # Appointments
     path('appointments/', views.AppointmentList.as_view(), name='appointment-list'),

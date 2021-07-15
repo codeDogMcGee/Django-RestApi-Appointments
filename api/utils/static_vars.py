@@ -9,6 +9,9 @@ GROUPS = ['Employees', 'Customers', 'Managers', 'Admins']
 
 CATEGORIES = ['Nails', 'Dip Nails', 'Add-Ons', 'Eyelashes', 'Mani Pedi', 'Kids 10 & Under', 'Waxing']
 
+MAX_SERVICES_PER_APPOINTMENT = 2
+
+EMAIL_VERIFY_TOKEN_KEEP_ALIVE_SECONDS = 600
 
 
 

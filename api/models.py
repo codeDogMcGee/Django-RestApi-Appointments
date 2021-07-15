@@ -5,8 +5,9 @@ from django.db import models
 from django.utils import timezone
 
 from api.managers import CustomUserManager
-from api.utils.format_phone_number import format_phone_number
+# from api.utils.format_phone_number import format_phone_number
 from api.validators import is_int, service_category_exists
+from api.utils.static_vars import EMAIL_VERIFY_TOKEN_KEEP_ALIVE_SECONDS
 
 
 class HelperSettingsModel(models.Model):
@@ -21,7 +22,7 @@ class GroupIdsModel(models.Model):
 class ApiUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(_('email'), unique=True, max_length=100, blank=False, null=False)
     name = models.CharField(_('name'), max_length=100, blank=False)
-    phone = models.CharField(_('phone number'), max_length=10, unique=True, blank=False, validators=[MinLengthValidator(10), is_int.validate])
+    phone = models.CharField(_('phone number'), max_length=10, unique=True, blank=False, null=False, validators=[MinLengthValidator(10), is_int.validate])
     
     created = models.DateTimeField(auto_now_add=True, auto_created=True)    
     last_appointment_datetime = models.DateTimeField(null=True)
@@ -86,6 +87,7 @@ class Appointment(models.Model):
     end_time = models.DateTimeField(blank=False)
     customer = models.ForeignKey(ApiUser, related_name='customer', on_delete=models.CASCADE, blank=False, null=False)
     employee = models.ForeignKey(ApiUser, related_name='employee', on_delete=models.CASCADE, blank=False, null=False)
+    services = models.CharField(max_length=1000, validators=[int_list_validator], blank=False, null=False) # list of comma seperated service id's [3, 5]
 
     def __str__(self):
         return f'StartTime={self.start_time} | EndTime={self.end_time} | Employee={self.employee} | Customer={self.customer}'
@@ -113,6 +115,6 @@ class EmailVerificationToken(models.Model):
     email = models.EmailField(blank=False, null=False, unique=True)
     key = models.CharField(max_length=200, unique=True) # can set default=some_key_gen_method to auto generate the key
     created = models.DateTimeField(auto_now_add=True)
-    keep_alive_seconds = models.IntegerField(default=1800)
+    keep_alive_seconds = models.IntegerField(default=EMAIL_VERIFY_TOKEN_KEEP_ALIVE_SECONDS)
 
 

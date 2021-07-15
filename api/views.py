@@ -1,3 +1,4 @@
+from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.core.validators import validate_email
@@ -19,7 +20,7 @@ from api import models
 from api.utils.static_vars import COMPANY_EMAIL_FROM, COMPANY_NAME
 from api.utils.get_or_create_groups import get_or_create_groups
 from api.utils.manage_appointments import execute_helper_functions
-from api.utils.email_verification_token import create_token, delete_tokens_if_expired, check_token
+from api.utils.email_verification_token import create_unique_token, delete_tokens_if_expired, check_token
 from api.validators import is_valid_group
 
 
@@ -174,19 +175,18 @@ class UsersView(APIView):
             users = None
             if (group_name == 'Customers' and 'Customers' in request_user_groups) or \
                 (group_name == 'Employees' and 'Employees' in request_user_groups):
-                # if it's a customer requesting customers only give them themselves
-                users = [{'id': request.user.id, 'name': request.user.name, 'phone': request.user.phone}]
+                # if it's a customer requesting customers only give them themselves, same with employee requesting employees
+                users = [{'id': request.user.id, 'name': request.user.name, 'email': request.user.email, 'phone': request.user.phone}]
                 serializer = serializers.AppUserSerializer(users, many=True)
 
-            elif (group_name == 'Customers' and 'Employees' in request_user_groups) or (request.user.is_staff):
-                # if an employee is requesting customers return them all active customers
+            elif (group_name == 'Customers' and 'Employees' in request_user_groups) or \
+                (group_name == 'Employees' and 'Customers' in request_user_groups):
+                # if an employee is requesting customers or 
+                # if a customer is requesting employees don't include personal info
                 users = models.ApiUser.objects.filter(is_active=True).filter(groups__name=group_name)
                 serializer = serializers.AppUserNameOnlySerializer(users, many=True)
-
-            elif group_name == 'Employees' and 'Customers' in request_user_groups:
-                # if a customer is requesting employees don't include the phone numbers
-                users = models.ApiUser.objects.filter(is_active=True).filter(groups__name=group_name)
-                serializer = serializers.AppUserNameOnlySerializer(users, many=True)
+            else:
+                return Response('User not authorized to view this user group', status=status.HTTP_401_UNAUTHORIZED)
 
         elif request.user.is_staff:
             # admins can view all users
@@ -206,6 +206,7 @@ class UsersView(APIView):
                 groups_dict = get_or_create_groups()
 
                 serializer = serializers.AppCreateUserSerializer(data=request.data)
+
                 if serializer.is_valid():
 
                     # make sure a valid group name was passed to the url
@@ -218,6 +219,7 @@ class UsersView(APIView):
                     new_user = models.ApiUser.objects.create_user(
                         email = serializer.validated_data['email'], 
                         name = serializer.validated_data['name'], 
+                        phone = serializer.validated_data['phone'],
                         password = serializer.validated_data['password_submitted']
                     )
 
@@ -306,15 +308,15 @@ class UserDetailView(APIView):
 class EmailVerificationTokenView(APIView):
     permission_classes = [permissions.AllowAny]
 
-    # def get(self, request):
-    #     delete_tokens_if_expired()
+    def get(self, request):
+        delete_tokens_if_expired()
 
-    #     if request.user.is_staff:
-    #         tokens = models.EmailVerificationToken.objects.all()
-    #         serializer = serializers.EmailVerificationTokenSerializer(tokens, many=True)
-    #         return Response(serializer.data)
-    #     else:
-    #         return Response(status=status.HTTP_401_UNAUTHORIZED)
+        if request.user.is_staff:
+            tokens = models.EmailVerificationToken.objects.all()
+            serializer = serializers.EmailVerificationTokenSerializer(tokens, many=True)
+            return Response(serializer.data)
+        else:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
 
     def post(self, request):
         delete_tokens_if_expired()
@@ -323,13 +325,18 @@ class EmailVerificationTokenView(APIView):
             validate_email(request.data['email'])
         except ValidationError as e:
             return Response(e, status=status.HTTP_400_BAD_REQUEST)
-            
+
         # Before creating a token associated with an email, first delete any other tokens that might exist
         existing_tokens = models.EmailVerificationToken.objects.filter(email=request.data['email'])
         for token in existing_tokens:
+   
+            if timezone.now() < token.created + timezone.timedelta(seconds=round(token.keep_alive_seconds / 2, 0)):
+                return Response('You can not create another token yet. Try again later.', status=status.HTTP_401_UNAUTHORIZED)
+
             token.delete()
 
-        token_object = create_token()
+        token_object = create_unique_token()
+
         token_serializer = serializers.EmailVerificationTokenSerializer(data={'email': request.data['email'],
                                                                                 'key': str(token_object["hash"])})
 
@@ -345,7 +352,7 @@ class EmailVerificationTokenView(APIView):
                 body_init = 'resetting your password'
 
             except models.ApiUser.DoesNotExist:
-                # send email link to create a user if they do not already exist
+                # send email key to create a user if they do not already exist
                 subject_suffix = 'Create Account'
                 endpoint = 'create-customer'
                 body_init = 'creating your account'
@@ -353,9 +360,7 @@ class EmailVerificationTokenView(APIView):
             email_from = COMPANY_EMAIL_FROM
             email_to = request.data['email']
             email_subject = f'{COMPANY_NAME} - {subject_suffix}'
-            email_body = f'Click the link below to finish {body_init}. '
-            email_body += 'If clicking the link does not work please copy and paste into your browser.\n\n'
-            email_body+= f'{request.build_absolute_uri("/")}{endpoint}/{token_object["text"]}'
+            email_body = f'Your verification key:\n\n{token_object["text"][:3]} {token_object["text"][3:]}'
 
             send_mail(email_subject, email_body, email_from, [email_to], fail_silently=False)
 
@@ -386,6 +391,7 @@ class CreateCustomerView(APIView):
                     new_user = models.ApiUser.objects.create_user(
                         email = serializer.validated_data['email'], 
                         name = serializer.validated_data['name'], 
+                        phone = serializer.validated_data['phone'], 
                         password = serializer.validated_data['password_submitted']
                     )
 
